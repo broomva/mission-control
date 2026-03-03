@@ -1,0 +1,40 @@
+name: Harness CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  harness:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install system dependencies (macOS)
+        run: |
+          brew install gtk4 webkitgtk || true
+
+      - name: Install frontend dependencies
+        run: bun install
+
+      - name: Harness audit
+        run: ./scripts/harness/audit.sh .
+
+      - name: Smoke check
+        run: make smoke
+
+      - name: Static checks
+        run: make check
+
+      - name: Tests
+        run: make test
