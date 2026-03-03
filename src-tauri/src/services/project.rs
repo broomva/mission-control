@@ -69,3 +69,72 @@ impl ProjectService {
             .ok_or_else(|| AppError::ProjectNotFound(id.to_string()))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_project_service() -> ProjectService {
+        let dir = tempfile::tempdir().unwrap();
+        let persistence = PersistenceService::with_base_dir(dir.path().to_path_buf());
+        // Leak the tempdir so it lives long enough for all test operations
+        std::mem::forget(dir);
+        ProjectService::new(persistence)
+    }
+
+    #[test]
+    fn list_empty() {
+        let svc = test_project_service();
+        assert!(svc.list().is_empty());
+    }
+
+    #[test]
+    fn add_and_list() {
+        let svc = test_project_service();
+        let project = svc.add("test-proj".into(), "/tmp/test-proj".into()).unwrap();
+        assert_eq!(project.name, "test-proj");
+
+        let projects = svc.list();
+        assert_eq!(projects.len(), 1);
+        assert_eq!(projects[0].id, project.id);
+    }
+
+    #[test]
+    fn add_duplicate_path_fails() {
+        let svc = test_project_service();
+        svc.add("first".into(), "/tmp/same-path".into()).unwrap();
+        let result = svc.add("second".into(), "/tmp/same-path".into());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn remove_project() {
+        let svc = test_project_service();
+        let project = svc.add("removable".into(), "/tmp/removable".into()).unwrap();
+        let removed = svc.remove(&project.id).unwrap();
+        assert_eq!(removed.id, project.id);
+        assert!(svc.list().is_empty());
+    }
+
+    #[test]
+    fn remove_nonexistent_fails() {
+        let svc = test_project_service();
+        let result = svc.remove("nonexistent-id");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn get_project() {
+        let svc = test_project_service();
+        let project = svc.add("gettable".into(), "/tmp/gettable".into()).unwrap();
+        let fetched = svc.get(&project.id).unwrap();
+        assert_eq!(fetched.name, "gettable");
+    }
+
+    #[test]
+    fn get_nonexistent_fails() {
+        let svc = test_project_service();
+        let result = svc.get("no-such-id");
+        assert!(result.is_err());
+    }
+}

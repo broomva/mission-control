@@ -178,3 +178,35 @@ impl TerminalService {
         sessions.values().map(|s| s.info.clone()).collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_service_has_no_sessions() {
+        let svc = TerminalService::new();
+        assert!(svc.list().is_empty());
+    }
+
+    #[test]
+    fn write_to_nonexistent_terminal_fails() {
+        let svc = TerminalService::new();
+        let result = svc.write("nonexistent", b"hello");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn resize_nonexistent_terminal_fails() {
+        let svc = TerminalService::new();
+        let result = svc.resize("nonexistent", 120, 40);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn close_nonexistent_terminal_fails() {
+        let svc = TerminalService::new();
+        let result = svc.close("nonexistent");
+        assert!(result.is_err());
+    }
+}

@@ -18,6 +18,12 @@ impl PersistenceService {
         Self { base_dir }
     }
 
+    #[cfg(test)]
+    pub fn with_base_dir(base_dir: PathBuf) -> Self {
+        fs::create_dir_all(&base_dir).ok();
+        Self { base_dir }
+    }
+
     fn projects_path(&self) -> PathBuf {
         self.base_dir.join("projects.json")
     }
@@ -78,5 +84,76 @@ impl PersistenceService {
         fs::write(self.state_path(), data)?;
         info!("saved workspace state to disk");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn temp_persistence() -> (tempfile::TempDir, PersistenceService) {
+        let dir = tempfile::tempdir().unwrap();
+        let svc = PersistenceService::with_base_dir(dir.path().to_path_buf());
+        (dir, svc)
+    }
+
+    #[test]
+    fn load_projects_empty() {
+        let (_dir, svc) = temp_persistence();
+        let projects = svc.load_projects();
+        assert!(projects.is_empty());
+    }
+
+    #[test]
+    fn save_and_load_projects() {
+        let (_dir, svc) = temp_persistence();
+        let projects = vec![
+            Project::new("alpha".into(), "/tmp/alpha".into()),
+            Project::new("beta".into(), "/tmp/beta".into()),
+        ];
+        svc.save_projects(&projects).unwrap();
+
+        let loaded = svc.load_projects();
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].name, "alpha");
+        assert_eq!(loaded[1].name, "beta");
+    }
+
+    #[test]
+    fn corrupt_projects_file_returns_empty() {
+        let (dir, svc) = temp_persistence();
+        fs::write(dir.path().join("projects.json"), "not json!").unwrap();
+        let projects = svc.load_projects();
+        assert!(projects.is_empty());
+    }
+
+    #[test]
+    fn save_and_load_workspace_state() {
+        let (_dir, svc) = temp_persistence();
+        let state = WorkspaceState {
+            layout: Some("{\"grid\":{}}".into()),
+            active_project_id: Some("proj-1".into()),
+        };
+        svc.save_workspace_state(&state).unwrap();
+
+        let loaded = svc.load_workspace_state();
+        assert_eq!(loaded.layout.unwrap(), "{\"grid\":{}}");
+        assert_eq!(loaded.active_project_id.unwrap(), "proj-1");
+    }
+
+    #[test]
+    fn corrupt_state_file_returns_default() {
+        let (dir, svc) = temp_persistence();
+        fs::write(dir.path().join("state.json"), "{{bad}}").unwrap();
+        let state = svc.load_workspace_state();
+        assert!(state.layout.is_none());
+        assert!(state.active_project_id.is_none());
+    }
+
+    #[test]
+    fn load_workspace_state_no_file() {
+        let (_dir, svc) = temp_persistence();
+        let state = svc.load_workspace_state();
+        assert!(state.layout.is_none());
     }
 }
