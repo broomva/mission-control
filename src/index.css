@@ -1,0 +1,268 @@
+:root {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #e0e0e0;
+  background-color: #1a1a2e;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.app-shell {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 12px;
+  background: #16213e;
+  border-bottom: 1px solid #2a2a4a;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.toolbar-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #a0a0c0;
+  letter-spacing: 0.5px;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+/* Dockview container */
+.dockview-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Dashboard */
+.dashboard {
+  padding: 24px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.dashboard-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* Project Card */
+.project-card {
+  background: #16213e;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.project-card-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.project-path {
+  font-size: 12px;
+  color: #8888aa;
+  word-break: break-all;
+  margin-bottom: 12px;
+}
+
+.project-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #8888aa;
+}
+
+.empty-state p {
+  margin-bottom: 8px;
+}
+
+.empty-state .btn {
+  margin-top: 16px;
+}
+
+/* Buttons */
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #4a6cf7;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #5a7cf8;
+}
+
+.btn-secondary {
+  background: #2a2a4a;
+  color: #c0c0d0;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #3a3a5a;
+}
+
+.btn-danger {
+  background: transparent;
+  color: #e06060;
+  border: 1px solid #4a2020;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #4a2020;
+}
+
+.btn-toolbar {
+  background: transparent;
+  color: #a0a0c0;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btn-toolbar:hover {
+  background: #2a2a4a;
+}
+
+/* Dialog */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 12px;
+  padding: 24px;
+  width: 480px;
+  max-width: 90vw;
+}
+
+.dialog h3 {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.dialog-field {
+  margin-bottom: 12px;
+}
+
+.dialog-field label {
+  display: block;
+  font-size: 12px;
+  color: #8888aa;
+  margin-bottom: 4px;
+}
+
+.dialog-field input {
+  width: 100%;
+  padding: 8px 10px;
+  background: #16213e;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+  color: #e0e0e0;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.dialog-field input:focus {
+  outline: none;
+  border-color: #4a6cf7;
+}
+
+.dialog-browse {
+  display: flex;
+  gap: 8px;
+}
+
+.dialog-browse input {
+  flex: 1;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
