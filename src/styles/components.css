@@ -327,3 +327,338 @@
 .empty-state .btn {
   margin-top: var(--space-5);
 }
+
+/* ============================================================
+   Git Status — File Tree Colors
+   ============================================================ */
+
+.file-tree-item-staged .file-tree-name {
+  color: var(--git-staged);
+}
+
+.file-tree-item-modified .file-tree-name {
+  color: var(--git-modified);
+}
+
+.file-tree-item-untracked .file-tree-name {
+  color: var(--git-untracked);
+}
+
+.file-tree-item-conflicted .file-tree-name {
+  color: var(--git-conflicted);
+}
+
+.file-tree-item-deleted .file-tree-name {
+  color: var(--git-deleted);
+  text-decoration: line-through;
+}
+
+.file-tree-item-renamed .file-tree-name {
+  color: var(--git-staged);
+}
+
+/* ============================================================
+   Git Log
+   ============================================================ */
+
+.git-log {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.git-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.git-log-branch {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.git-log-branch-count {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.git-log-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.commit-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-bottom: 1px solid var(--glass-border);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  transition: background var(--transition-fast);
+}
+
+.commit-row:hover {
+  background: var(--glass-bg-hover);
+}
+
+.commit-row-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow: hidden;
+}
+
+.commit-oid {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.commit-message {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.commit-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.branch-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.git-log-load-more {
+  display: block;
+  width: 100%;
+  padding: var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-align: center;
+  transition: background var(--transition-fast);
+}
+
+.git-log-load-more:hover {
+  background: var(--glass-bg-hover);
+}
+
+.git-log-load-more:disabled {
+  color: var(--text-tertiary);
+  cursor: default;
+}
+
+/* ============================================================
+   Diff Viewer
+   ============================================================ */
+
+.diff-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
+.diff-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.diff-header-oid {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.diff-stats {
+  display: flex;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.diff-stats-files {
+  color: var(--text-secondary);
+}
+
+.diff-stats-add {
+  color: var(--success);
+}
+
+.diff-stats-del {
+  color: var(--danger);
+}
+
+.diff-files {
+  flex: 1;
+}
+
+.diff-file {
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.diff-file-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-5);
+  border: none;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.diff-file-header:hover {
+  background: var(--glass-bg-hover);
+}
+
+.diff-file-toggle {
+  color: var(--text-tertiary);
+  width: 12px;
+  flex-shrink: 0;
+}
+
+.diff-file-status {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.diff-file-status-added {
+  color: var(--success);
+}
+
+.diff-file-status-modified {
+  color: var(--git-modified);
+}
+
+.diff-file-status-deleted {
+  color: var(--danger);
+}
+
+.diff-file-status-renamed {
+  color: var(--accent);
+}
+
+.diff-file-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diff-file-old-path {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.diff-file-hunks {
+  background: var(--bg-canvas);
+}
+
+.diff-hunk {
+  border-top: 1px solid var(--glass-border);
+}
+
+.diff-hunk-header {
+  padding: var(--space-2) var(--space-5);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  background: rgba(0, 122, 255, 0.05);
+}
+
+.diff-hunk-lines {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.diff-line {
+  display: flex;
+  min-height: 20px;
+}
+
+.diff-line-add {
+  background: rgba(48, 209, 88, 0.1);
+}
+
+.diff-line-del {
+  background: rgba(255, 69, 58, 0.1);
+}
+
+.diff-line-context {
+  background: transparent;
+}
+
+.diff-line-number {
+  display: inline-block;
+  width: 40px;
+  padding: 0 var(--space-2);
+  text-align: right;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  user-select: none;
+  font-size: var(--text-xs);
+}
+
+.diff-line-origin {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.diff-line-content {
+  flex: 1;
+  white-space: pre;
+  padding-right: var(--space-4);
+}

@@ -23,6 +23,15 @@ pub enum AppError {
 
     #[error("Invalid path: {0}")]
     InvalidPath(String),
+
+    #[error("Git error: {0}")]
+    GitError(String),
+}
+
+impl From<git2::Error> for AppError {
+    fn from(e: git2::Error) -> Self {
+        AppError::GitError(e.to_string())
+    }
 }
 
 impl From<std::io::Error> for AppError {

@@ -12,3 +12,14 @@ pub struct TerminalDataEvent {
 pub struct TerminalExitEvent {
     pub terminal_id: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+pub struct FsChangeEvent {
+    pub project_id: String,
+    pub paths: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+pub struct GitRefChangedEvent {
+    pub project_id: String,
+}

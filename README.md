@@ -7,6 +7,8 @@ A Tauri 2.0 desktop app for unified terminal management and AI agent orchestrati
 - **Liquid Glass UI** — Apple-style translucent surfaces with backdrop-filter blur and CSS design tokens
 - **Terminal Multiplexing** — Spawn and manage multiple PTY sessions per project in dockable panels
 - **Project Workspace** — Sidebar navigation, file browser, and multi-terminal workspace per project
+- **Git Integration** — Status-colored file tree, commit log with branch refs, diff viewer with hunk-level rendering
+- **Live File Watching** — Filesystem watcher per project with debounced git status and ref change events
 - **Dockable Layout** — Flexible panel arrangement with dockview-react, layout persistence
 - **Typed IPC** — Auto-generated TypeScript bindings from Rust types via specta
 
@@ -50,15 +52,17 @@ Frontend (React 19 / TypeScript)  →  Tauri IPC (typed via specta)  →  Backen
   - `project.rs` — Project registry CRUD
   - `terminal.rs` — PTY lifecycle via portable-pty
   - `persistence.rs` — JSON file persistence to `~/.mission-control/`
+  - `git.rs` — Git operations via libgit2 (status, log, diff, branches)
+  - `fs_watcher.rs` — Filesystem watching with notify + debounce
 - `src-tauri/src/commands/` — Tauri IPC command handlers
 - `src-tauri/src/models/` — Typed data models (serde + specta)
 
 ### Frontend (React + TypeScript)
 
-- `src/stores/` — Zustand state slices (project, terminal, layout)
-- `src/panels/` — Dockview panel components (dashboard, terminal, file tree)
-- `src/layout/` — App shell, sidebar navigation, dock wrapper
-- `src/components/` — Reusable UI (project card, dialogs)
+- `src/stores/` — Zustand state slices (project, terminal, layout, git)
+- `src/panels/` — Dockview panel components (dashboard, terminal, diff viewer)
+- `src/layout/` — App shell, sidebar, context panel, dock wrapper
+- `src/components/` — Reusable UI (project card, file tree, git log, dialogs)
 - `src/styles/` — Liquid Glass design system (tokens, base, glass, components, layout)
 - `src/bindings.ts` — Auto-generated typed bindings (do not edit)
 
@@ -73,21 +77,21 @@ See `docs/ARCHITECTURE.md` for the full boundary map.
 
 ## Testing
 
-### Rust (18 tests)
+### Rust (29 tests)
 
 ```bash
 cd src-tauri && cargo test
 ```
 
-Tests cover persistence (save/load, corruption recovery), project CRUD, and terminal service edge cases.
+Tests cover persistence (save/load, corruption recovery), project CRUD, terminal service edge cases, git operations (status, log, diff, branches), and filesystem watcher lifecycle.
 
-### Frontend (20 tests)
+### Frontend (38 tests)
 
 ```bash
 bun run test
 ```
 
-Tests cover Zustand store logic with mocked Tauri IPC bindings.
+Tests cover Zustand store logic with mocked Tauri IPC bindings for project, terminal, layout, and git stores.
 
 ## License
 

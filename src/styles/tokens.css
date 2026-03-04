@@ -83,6 +83,13 @@
   --transition-slow: 350ms ease;
   --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
+  /* --- Git Status --- */
+  --git-staged: #30d158;
+  --git-modified: #ffd60a;
+  --git-untracked: rgba(255, 255, 255, 0.38);
+  --git-conflicted: #ff453a;
+  --git-deleted: #ff453a;
+
   /* --- Terminal (reference; actual values in TSX) --- */
   --terminal-bg: #0a0a16;
   --terminal-cursor: #007aff;

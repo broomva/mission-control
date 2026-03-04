@@ -126,6 +126,46 @@ async readDirectory(path: string) : Promise<Result<DirectoryEntry[], AppError>> 
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async gitStatus(projectId: string, path: string) : Promise<Result<FileStatusEntry[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("git_status", { projectId, path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async gitLog(projectId: string, path: string, offset: number, limit: number) : Promise<Result<CommitInfo[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("git_log", { projectId, path, offset, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async gitDiff(projectId: string, path: string, oid: string) : Promise<Result<DiffInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("git_diff", { projectId, path, oid }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async gitBranches(projectId: string, path: string) : Promise<Result<BranchInfo[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("git_branches", { projectId, path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async watchProject(projectId: string, path: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("watch_project", { projectId, path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -133,9 +173,13 @@ async readDirectory(path: string) : Promise<Result<DirectoryEntry[], AppError>> 
 
 
 export const events = __makeEvents__<{
+fsChangeEvent: FsChangeEvent,
+gitRefChangedEvent: GitRefChangedEvent,
 terminalDataEvent: TerminalDataEvent,
 terminalExitEvent: TerminalExitEvent
 }>({
+fsChangeEvent: "fs-change-event",
+gitRefChangedEvent: "git-ref-changed-event",
 terminalDataEvent: "terminal-data-event",
 terminalExitEvent: "terminal-exit-event"
 })
@@ -146,8 +190,30 @@ terminalExitEvent: "terminal-exit-event"
 
 /** user-defined types **/
 
-export type AppError = { ProjectNotFound: string } | { ProjectAlreadyExists: string } | { TerminalNotFound: string } | { TerminalError: string } | { IoError: string } | { SerializationError: string } | { InvalidPath: string }
+export type AppError = { ProjectNotFound: string } | { ProjectAlreadyExists: string } | { TerminalNotFound: string } | { TerminalError: string } | { IoError: string } | { SerializationError: string } | { InvalidPath: string } | { GitError: string }
+export type BranchInfo = { name: string; is_head: boolean; upstream: string | null; oid: string }
+export type CommitInfo = { oid: string; short_oid: string; message: string; author: string; author_email: string; timestamp: number; parents: string[]; branch_refs: string[] }
+export type DiffHunk = { header: string; lines: DiffLine[] }
+export type DiffInfo = { commit_oid: string; files: FileDiff[]; stats: DiffStats }
+export type DiffLine = { 
+/**
+ * "+" | "-" | " "
+ */
+origin: string; content: string; old_lineno: number | null; new_lineno: number | null }
+export type DiffStats = { files_changed: number; insertions: number; deletions: number }
 export type DirectoryEntry = { name: string; path: string; is_dir: boolean; is_hidden: boolean }
+export type FileDiff = { path: string; 
+/**
+ * "added" | "modified" | "deleted" | "renamed"
+ */
+status: string; old_path: string | null; hunks: DiffHunk[] }
+export type FileStatusEntry = { path: string; 
+/**
+ * "modified" | "staged" | "untracked" | "conflicted" | "deleted" | "renamed"
+ */
+status: string }
+export type FsChangeEvent = { project_id: string; paths: string[] }
+export type GitRefChangedEvent = { project_id: string }
 export type Project = { id: string; name: string; path: string; created_at: string }
 export type TerminalDataEvent = { terminal_id: string; data: number[] }
 export type TerminalExitEvent = { terminal_id: string }

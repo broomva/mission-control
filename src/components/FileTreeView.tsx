@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import type { DirectoryEntry } from "../bindings";
+import type { DirectoryEntry, FileStatusEntry } from "../bindings";
 import { commands } from "../bindings";
 
 interface FileTreeViewProps {
   rootPath: string;
+  gitStatuses?: FileStatusEntry[];
 }
 
 interface TreeNode extends DirectoryEntry {
@@ -13,7 +14,7 @@ interface TreeNode extends DirectoryEntry {
   depth: number;
 }
 
-export function FileTreeView({ rootPath }: FileTreeViewProps) {
+export function FileTreeView({ rootPath, gitStatuses }: FileTreeViewProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showHidden, setShowHidden] = useState(false);
@@ -110,16 +111,28 @@ export function FileTreeView({ rootPath }: FileTreeViewProps) {
     [nodes, loadDirectory],
   );
 
+  const getGitStatusClass = (nodePath: string): string => {
+    if (!gitStatuses) return "";
+    // Get the relative path by removing rootPath prefix
+    const relativePath = nodePath.startsWith(rootPath)
+      ? nodePath.slice(rootPath.length + 1)
+      : nodePath;
+    const entry = gitStatuses.find((s) => s.path === relativePath);
+    if (entry) return `file-tree-item-${entry.status}`;
+    return "";
+  };
+
   const renderNode = (node: TreeNode): React.ReactNode => {
     if (!showHidden && node.is_hidden) return null;
 
     const indent = node.depth * 16;
+    const gitClass = getGitStatusClass(node.path);
 
     return (
       <div key={node.path}>
         <button
           type="button"
-          className={`file-tree-item ${node.is_dir ? "file-tree-dir" : "file-tree-file"}`}
+          className={`file-tree-item ${node.is_dir ? "file-tree-dir" : "file-tree-file"} ${gitClass}`}
           style={{ paddingLeft: `${indent + 8}px` }}
           onClick={() => {
             if (node.is_dir) toggleExpand(node.path);

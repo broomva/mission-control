@@ -20,6 +20,12 @@ interface LayoutState {
     projectName: string,
     projectPath: string,
   ) => void;
+  openDiffViewer: (
+    projectId: string,
+    projectPath: string,
+    commitOid: string,
+    commitMessage: string,
+  ) => void;
 }
 
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -137,5 +143,31 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
     if (createResult.status === "ok") {
       addTerminalPanel(createResult.data.id, `${projectName} - Terminal`);
     }
+  },
+
+  openDiffViewer: (
+    projectId: string,
+    projectPath: string,
+    commitOid: string,
+    commitMessage: string,
+  ) => {
+    const { dockviewApi } = get();
+    if (!dockviewApi) return;
+
+    const panelId = `diff-${commitOid.slice(0, 8)}`;
+
+    // If already open, focus it
+    const existing = dockviewApi.panels.find((p) => p.id === panelId);
+    if (existing) {
+      existing.api.setActive();
+      return;
+    }
+
+    dockviewApi.addPanel({
+      id: panelId,
+      component: "diffviewer",
+      title: commitMessage.slice(0, 50),
+      params: { projectId, projectPath, commitOid },
+    });
   },
 }));

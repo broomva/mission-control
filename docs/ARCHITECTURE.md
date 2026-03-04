@@ -61,6 +61,21 @@ Frontend (React/TypeScript)  →  Tauri IPC (typed via specta)  →  Backend (Ru
 4. Side effects: Optional worktree creation via `GitService`
 5. Events: Emit `agent:spawned`, then continuous `agent:event` stream as parser produces `AgentEvent`s
 
+### Git status and live updates
+1. Entry: User selects a project → `ContextPanel` activates
+2. Boundary: `FsWatcherService.watch()` starts a `notify` watcher on the project directory
+3. Core: Watcher debounces events (500ms), classifies `.git/refs/` and `.git/HEAD` changes
+4. Events: File changes → `FsChangeEvent` → frontend re-fetches `git_status`
+5. Events: Ref changes → `GitRefChangedEvent` → frontend re-fetches `git_status`, `git_log`, `git_branches`
+6. Display: `FileTreeView` colors file names by status; `GitLogView` shows commit history
+
+### Viewing a commit diff
+1. Entry: User clicks a commit in `GitLogView`
+2. Frontend: `layoutStore.openDiffViewer()` creates a dockview panel
+3. Boundary: `DiffViewerPanel` calls `git_diff(projectId, path, oid)`
+4. Core: `GitService.get_diff()` diffs commit tree against parent tree via `git2`
+5. Display: Expandable file list with hunk-level +/- line coloring
+
 ### Terminal data flow
 1. Entry: User types in `TerminalPanel`
 2. Frontend → IPC: `write_terminal(id, data)` sends keystrokes to Rust
@@ -78,7 +93,7 @@ src/styles/
   tokens.css      — CSS custom properties (colors, spacing, typography, glass, shadows)
   base.css        — Reset, root defaults, scrollbar, focus rings
   glass.css       — Reusable glass-morphism utilities (.glass, .glass-interactive, etc.)
-  components.css  — Buttons, cards, dialogs, inputs, empty state
+  components.css  — Buttons, cards, dialogs, inputs, empty state, git status/log/diff styles
   layout.css      — App shell, sidebar, toolbar, dockview overrides, dashboard grid
 src/index.css     — Barrel import of all style files
 ```
@@ -94,10 +109,13 @@ src/index.css     — Barrel import of all style files
 AppShell
 ├── Sidebar (project list, navigation, add project)
 ├── Toolbar (title, context actions)
-└── DockviewWrapper (panel container)
-    ├── ProjectDashboard (project grid when no project active)
-    ├── FileTreePanel (directory browser per project)
-    └── TerminalPanel (xterm.js, multiple per project)
+├── DockviewWrapper (panel container)
+│   ├── ProjectDashboard (project grid when no project active)
+│   ├── TerminalPanel (xterm.js, multiple per project)
+│   └── DiffViewerPanel (commit diffs with hunk-level rendering)
+└── ContextPanel (right sidebar, 280px)
+    ├── Files tab → FileTreeView (directory browser, git status colors)
+    └── Git tab → GitLogView (commit log, branch refs, click-to-diff)
 ```
 
 ## Refactor Checklist

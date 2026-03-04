@@ -26,6 +26,9 @@ tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "6"
+git2 = "0.20"
+notify = { version = "7", features = ["macos_fsevent"] }
+notify-debouncer-mini = "0.5"
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
 tauri-specta = { version = "=2.0.0-rc.21", features = ["typescript", "derive"] }
 specta-typescript = "0.0.9"

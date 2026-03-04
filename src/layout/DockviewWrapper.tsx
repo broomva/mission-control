@@ -5,6 +5,7 @@ import {
 } from "dockview-react";
 import "dockview-react/dist/styles/dockview.css";
 import { useCallback, useEffect, useRef } from "react";
+import { DiffViewerPanel } from "../panels/DiffViewerPanel";
 import { ProjectDashboard } from "../panels/ProjectDashboard";
 import { TerminalPanel } from "../panels/TerminalPanel";
 import { useLayoutStore } from "../stores/layoutStore";
@@ -15,6 +16,7 @@ const components: Record<
 > = {
   dashboard: ProjectDashboard,
   terminal: TerminalPanel,
+  diffviewer: DiffViewerPanel,
 };
 
 export function DockviewWrapper() {

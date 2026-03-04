@@ -4,12 +4,12 @@ mod services;
 
 use std::sync::Arc;
 
-use services::{PersistenceService, ProjectService, TerminalService};
+use services::{FsWatcherService, GitService, PersistenceService, ProjectService, TerminalService};
 use tauri_specta::{collect_commands, collect_events, Builder};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-use crate::models::{TerminalDataEvent, TerminalExitEvent};
+use crate::models::{FsChangeEvent, GitRefChangedEvent, TerminalDataEvent, TerminalExitEvent};
 
 fn create_specta_builder() -> Builder {
     Builder::<tauri::Wry>::new()
@@ -29,8 +29,18 @@ fn create_specta_builder() -> Builder {
             commands::workspace::load_workspace_state,
             commands::workspace::save_workspace_state,
             commands::fs::read_directory,
+            commands::git::git_status,
+            commands::git::git_log,
+            commands::git::git_diff,
+            commands::git::git_branches,
+            commands::git::watch_project,
         ])
-        .events(collect_events![TerminalDataEvent, TerminalExitEvent])
+        .events(collect_events![
+            TerminalDataEvent,
+            TerminalExitEvent,
+            FsChangeEvent,
+            GitRefChangedEvent
+        ])
 }
 
 pub fn export_bindings() {
@@ -63,6 +73,8 @@ pub fn run() {
     let persistence = Arc::new(PersistenceService::new());
     let project_service = ProjectService::new(PersistenceService::new());
     let terminal_service = TerminalService::new(Arc::clone(&persistence));
+    let git_service = GitService::new();
+    let fs_watcher_service = FsWatcherService::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -74,6 +86,8 @@ pub fn run() {
         .manage(persistence)
         .manage(project_service)
         .manage(terminal_service)
+        .manage(git_service)
+        .manage(fs_watcher_service)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
