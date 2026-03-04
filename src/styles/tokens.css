@@ -1,0 +1,96 @@
+/* ============================================================
+   Design Tokens — Liquid Glass Design System
+   ============================================================ */
+
+:root {
+  /* --- Backgrounds --- */
+  --bg-canvas: #0a0a16;
+  --bg-base: #111122;
+  --bg-elevated: #1a1a2e;
+
+  /* --- Glass --- */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-bg-active: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.14);
+  --glass-blur: blur(20px) saturate(180%);
+  --glass-blur-strong: blur(40px) saturate(200%);
+  --glass-bg-prominent: rgba(0, 122, 255, 0.08);
+  --glass-border-prominent: rgba(0, 122, 255, 0.18);
+  --glass-bg-danger: rgba(255, 69, 58, 0.08);
+  --glass-border-danger: rgba(255, 69, 58, 0.18);
+
+  /* --- Text --- */
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.58);
+  --text-tertiary: rgba(255, 255, 255, 0.38);
+
+  /* --- Accent --- */
+  --accent: #007aff;
+  --accent-hover: #3395ff;
+  --accent-subtle: rgba(0, 122, 255, 0.15);
+
+  /* --- Semantic --- */
+  --danger: #ff453a;
+  --danger-subtle: rgba(255, 69, 58, 0.15);
+  --success: #30d158;
+  --success-subtle: rgba(48, 209, 88, 0.15);
+
+  /* --- Typography --- */
+  --font-sans: "SF Pro Display", "SF Pro Text", Inter, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --font-mono: "SF Mono", Menlo, Monaco, "Cascadia Code", "Courier New",
+    monospace;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 24px;
+
+  /* --- Spacing --- */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-7: 24px;
+  --space-8: 32px;
+  --space-9: 40px;
+  --space-10: 48px;
+
+  /* --- Border Radius --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* --- Shadows --- */
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.25),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.4),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+  --shadow-glow-accent: 0 0 20px rgba(0, 122, 255, 0.25);
+
+  /* --- Transitions --- */
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 350ms ease;
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- Terminal (reference; actual values in TSX) --- */
+  --terminal-bg: #0a0a16;
+  --terminal-cursor: #007aff;
+  --terminal-selection: rgba(0, 122, 255, 0.25);
+
+  /* --- Z-Index --- */
+  --z-base: 0;
+  --z-elevated: 10;
+  --z-overlay: 100;
+  --z-dialog: 1000;
+}

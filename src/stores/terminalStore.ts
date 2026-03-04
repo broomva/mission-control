@@ -10,6 +10,12 @@ interface TerminalState {
   ) => Promise<TerminalInfo | null>;
   closeTerminal: (id: string) => Promise<void>;
   removeTerminal: (id: string) => void;
+  fetchProjectTerminals: (projectId: string) => Promise<TerminalInfo[]>;
+  restoreTerminal: (
+    id: string,
+    cols?: number,
+    rows?: number,
+  ) => Promise<TerminalInfo | null>;
 }
 
 export const useTerminalStore = create<TerminalState>((set) => ({
@@ -37,5 +43,30 @@ export const useTerminalStore = create<TerminalState>((set) => ({
     set((state) => ({
       terminals: state.terminals.filter((t) => t.id !== id),
     }));
+  },
+
+  fetchProjectTerminals: async (projectId: string) => {
+    const result = await commands.listProjectTerminals(projectId);
+    if (result.status === "ok") {
+      set((state) => {
+        const otherTerminals = state.terminals.filter(
+          (t) => t.project_id !== projectId,
+        );
+        return { terminals: [...otherTerminals, ...result.data] };
+      });
+      return result.data;
+    }
+    return [];
+  },
+
+  restoreTerminal: async (id: string, cols: number = 80, rows: number = 24) => {
+    const result = await commands.restoreTerminal(id, cols, rows);
+    if (result.status === "ok") {
+      set((state) => ({
+        terminals: [...state.terminals.filter((t) => t.id !== id), result.data],
+      }));
+      return result.data;
+    }
+    return null;
   },
 }));

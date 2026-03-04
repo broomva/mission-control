@@ -2,6 +2,8 @@ mod commands;
 mod models;
 mod services;
 
+use std::sync::Arc;
+
 use services::{PersistenceService, ProjectService, TerminalService};
 use tauri_specta::{collect_commands, collect_events, Builder};
 use tracing::info;
@@ -21,8 +23,12 @@ fn create_specta_builder() -> Builder {
             commands::terminal::resize_terminal,
             commands::terminal::close_terminal,
             commands::terminal::list_terminals,
+            commands::terminal::list_project_terminals,
+            commands::terminal::get_terminal_scrollback,
+            commands::terminal::restore_terminal,
             commands::workspace::load_workspace_state,
             commands::workspace::save_workspace_state,
+            commands::fs::read_directory,
         ])
         .events(collect_events![TerminalDataEvent, TerminalExitEvent])
 }
@@ -54,9 +60,9 @@ pub fn run() {
 
     info!("starting Mission Control");
 
-    let persistence = PersistenceService::new();
+    let persistence = Arc::new(PersistenceService::new());
     let project_service = ProjectService::new(PersistenceService::new());
-    let terminal_service = TerminalService::new();
+    let terminal_service = TerminalService::new(Arc::clone(&persistence));
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())

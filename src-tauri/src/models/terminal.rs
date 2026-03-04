@@ -8,4 +8,8 @@ pub struct TerminalInfo {
     pub title: String,
     pub cols: u16,
     pub rows: u16,
+    pub cwd: String,
+    pub created_at: String,
+    pub status: String,
+    pub scrollback_path: Option<String>,
 }

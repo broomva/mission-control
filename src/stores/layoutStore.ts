@@ -4,20 +4,36 @@ import { commands } from "../bindings";
 
 interface LayoutState {
   dockviewApi: DockviewApi | null;
+  contextPanelTab: "files" | "git";
   setDockviewApi: (api: DockviewApi) => void;
+  setContextPanelTab: (tab: "files" | "git") => void;
   saveLayout: () => Promise<void>;
   loadLayout: () => Promise<string | null>;
-  addTerminalPanel: (terminalId: string, title: string) => void;
+  addTerminalPanel: (
+    terminalId: string,
+    title: string,
+    params?: Record<string, unknown>,
+  ) => void;
   addDashboardPanel: () => void;
+  openProjectWorkspace: (
+    projectId: string,
+    projectName: string,
+    projectPath: string,
+  ) => void;
 }
 
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export const useLayoutStore = create<LayoutState>((set, get) => ({
   dockviewApi: null,
+  contextPanelTab: "files",
 
   setDockviewApi: (api: DockviewApi) => {
     set({ dockviewApi: api });
+  },
+
+  setContextPanelTab: (tab: "files" | "git") => {
+    set({ contextPanelTab: tab });
   },
 
   saveLayout: async () => {
@@ -43,15 +59,19 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
     return null;
   },
 
-  addTerminalPanel: (terminalId: string, title: string) => {
+  addTerminalPanel: (
+    terminalId: string,
+    title: string,
+    params?: Record<string, unknown>,
+  ) => {
     const { dockviewApi } = get();
     if (!dockviewApi) return;
 
     dockviewApi.addPanel({
       id: `terminal-${terminalId}`,
       component: "terminal",
-      title: title,
-      params: { terminalId },
+      title,
+      params: { terminalId, ...params },
     });
   },
 
@@ -73,5 +93,49 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
       component: "dashboard",
       title: "Projects",
     });
+  },
+
+  openProjectWorkspace: async (
+    projectId: string,
+    projectName: string,
+    projectPath: string,
+  ) => {
+    const { addTerminalPanel, dockviewApi } = get();
+    if (!dockviewApi) return;
+
+    // Check if there's already a terminal for this project
+    const hasTerminal = dockviewApi.panels.some(
+      (p) => p.id.startsWith("terminal-") && p.title?.includes(projectName),
+    );
+
+    if (hasTerminal) return;
+
+    // Check for persisted sessions
+    const result = await commands.listProjectTerminals(projectId);
+    if (result.status === "ok" && result.data.length > 0) {
+      for (const session of result.data) {
+        if (session.status === "exited") {
+          // Show exited session with scrollback
+          addTerminalPanel(session.id, `${projectName} - Terminal`, {
+            restoredSession: true,
+          });
+        } else {
+          // Running session (shouldn't normally happen after restart, but handle it)
+          addTerminalPanel(session.id, `${projectName} - Terminal`);
+        }
+      }
+      return;
+    }
+
+    // No saved terminals — create a fresh one
+    const createResult = await commands.createTerminal(
+      projectId,
+      projectPath,
+      80,
+      24,
+    );
+    if (createResult.status === "ok") {
+      addTerminalPanel(createResult.data.id, `${projectName} - Terminal`);
+    }
   },
 }));

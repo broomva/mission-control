@@ -1,0 +1,329 @@
+/* ============================================================
+   Components — Buttons, cards, dialogs, inputs, empty state
+   ============================================================ */
+
+/* --- Buttons --- */
+.btn {
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-glass);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-normal),
+    transform var(--transition-fast);
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--glass-bg-prominent);
+  border-color: var(--glass-border-prominent);
+  color: var(--accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: rgba(0, 122, 255, 0.14);
+  border-color: rgba(0, 122, 255, 0.28);
+  box-shadow: var(--shadow-glow-accent);
+}
+
+.btn-secondary {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background: var(--glass-bg-danger);
+  border-color: var(--glass-border-danger);
+  color: var(--danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(255, 69, 58, 0.14);
+  border-color: rgba(255, 69, 58, 0.28);
+}
+
+.btn-toolbar {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.btn-toolbar:hover {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+/* --- Project Card --- */
+.project-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-glass);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-normal),
+    transform var(--transition-normal);
+}
+
+.project-card:hover {
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--shadow-elevated);
+  transform: translateY(-2px);
+}
+
+.project-card-header h3 {
+  font-size: var(--text-md);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.project-path {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  word-break: break-all;
+  margin-bottom: var(--space-4);
+}
+
+.project-card-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* --- Dialog --- */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-dialog);
+  animation: overlay-fade-in var(--transition-normal) both;
+}
+
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.dialog {
+  background: rgba(30, 30, 50, 0.85);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-7);
+  width: 480px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-elevated);
+  animation: dialog-enter var(--transition-slow) both;
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+.dialog h3 {
+  margin-bottom: var(--space-5);
+  font-size: var(--text-lg);
+}
+
+.dialog-field {
+  margin-bottom: var(--space-4);
+}
+
+.dialog-field label {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.dialog-field input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.dialog-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.dialog-browse {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.dialog-browse input {
+  flex: 1;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+/* --- File Tree --- */
+.file-tree-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.file-tree-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.file-tree-root-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tree-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2) 0;
+}
+
+.file-tree-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+
+.file-tree-item:hover {
+  background: var(--glass-bg-hover);
+}
+
+.file-tree-dir {
+  color: var(--text-primary);
+}
+
+.file-tree-file {
+  color: var(--text-secondary);
+}
+
+.file-tree-icon {
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+  width: 12px;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.file-tree-dir .file-tree-icon {
+  color: var(--accent);
+}
+
+.file-tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-tree-children {
+  /* children indented via padding-left in style attr */
+}
+
+.file-tree-loading {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  padding: var(--space-1) 0;
+}
+
+.file-tree-error {
+  padding: var(--space-5) var(--space-4);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* --- Empty State --- */
+.empty-state {
+  text-align: center;
+  padding: var(--space-10) var(--space-7);
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  margin-bottom: var(--space-3);
+}
+
+.empty-state .btn {
+  margin-top: var(--space-5);
+}

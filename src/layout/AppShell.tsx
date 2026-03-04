@@ -1,25 +1,27 @@
-import { useLayoutStore } from "../stores/layoutStore";
+import { useEffect } from "react";
+import { useProjectStore } from "../stores/projectStore";
+import { ContextPanel } from "./ContextPanel";
 import { DockviewWrapper } from "./DockviewWrapper";
+import { Sidebar } from "./Sidebar";
 
 export function AppShell() {
-  const { addDashboardPanel } = useLayoutStore();
+  const { fetchProjects } = useProjectStore();
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   return (
     <div className="app-shell">
       <div className="toolbar">
         <span className="toolbar-title">Mission Control</span>
-        <div className="toolbar-actions">
-          <button
-            type="button"
-            className="btn btn-toolbar"
-            onClick={addDashboardPanel}
-          >
-            Projects
-          </button>
-        </div>
       </div>
-      <div className="dockview-container">
-        <DockviewWrapper />
+      <div className="app-body">
+        <Sidebar />
+        <div className="dockview-container">
+          <DockviewWrapper />
+        </div>
+        <ContextPanel />
       </div>
     </div>
   );

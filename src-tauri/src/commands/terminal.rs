@@ -1,7 +1,7 @@
 use tauri::{AppHandle, State};
 
 use crate::models::{AppError, TerminalInfo};
-use crate::services::TerminalService;
+use crate::services::{PersistenceService, TerminalService};
 
 #[tauri::command]
 #[specta::specta]
@@ -50,4 +50,34 @@ pub fn close_terminal(
 #[specta::specta]
 pub fn list_terminals(service: State<'_, TerminalService>) -> Result<Vec<TerminalInfo>, AppError> {
     Ok(service.list())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn list_project_terminals(
+    project_id: String,
+    service: State<'_, TerminalService>,
+) -> Result<Vec<TerminalInfo>, AppError> {
+    Ok(service.list_project_terminals(&project_id))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn get_terminal_scrollback(
+    id: String,
+    persistence: State<'_, std::sync::Arc<PersistenceService>>,
+) -> Result<Vec<u8>, AppError> {
+    Ok(persistence.load_scrollback(&id))
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn restore_terminal(
+    id: String,
+    cols: u16,
+    rows: u16,
+    service: State<'_, TerminalService>,
+    app_handle: AppHandle,
+) -> Result<TerminalInfo, AppError> {
+    service.restore_terminal(&id, cols, rows, app_handle)
 }

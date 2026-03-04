@@ -43,7 +43,8 @@
 
 ## Checkpoints
 
-- [ ] M1: Walking skeleton complete
+- [x] M1: Walking skeleton complete
+- [x] M1.5: Three-column layout + terminal session persistence
 - [ ] M2: Git integration complete
 - [ ] M3: Agent management complete
 - [ ] M4: Production-ready
@@ -64,6 +65,16 @@
   - Decision: Use Zustand for frontend state
   - Reason: Slice pattern fits per-project/per-agent stores. React-external access needed for Tauri event listeners.
   - Alternatives: Redux Toolkit (verbose), Jotai (less suited to event-driven updates)
+
+- 2026-03-03
+  - Decision: Liquid Glass design system (vanilla CSS)
+  - Reason: Premium Apple-style translucent surfaces with backdrop-filter blur, CSS custom properties for design tokens, no new dependencies. Reusable `.glass` utility classes.
+  - Alternatives: Tailwind (adds dependency), CSS-in-JS (runtime cost), plain hex colors (no system)
+
+- 2026-03-03
+  - Decision: Sidebar navigation with project workspace
+  - Reason: Sidebar gives persistent navigation across projects. Each project opens a workspace with file browser + multiple terminals in dockview panels.
+  - Alternatives: Tab-only navigation (less discoverable), full-page project view (loses terminal context)
 
 ## Final Verification
 

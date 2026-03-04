@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use tauri::State;
 
 use crate::models::{AppError, WorkspaceState};
@@ -6,7 +7,7 @@ use crate::services::PersistenceService;
 #[tauri::command]
 #[specta::specta]
 pub fn load_workspace_state(
-    service: State<'_, PersistenceService>,
+    service: State<'_, Arc<PersistenceService>>,
 ) -> Result<WorkspaceState, AppError> {
     Ok(service.load_workspace_state())
 }
@@ -15,7 +16,7 @@ pub fn load_workspace_state(
 #[specta::specta]
 pub fn save_workspace_state(
     state: WorkspaceState,
-    service: State<'_, PersistenceService>,
+    service: State<'_, Arc<PersistenceService>>,
 ) -> Result<(), AppError> {
     service.save_workspace_state(&state)
 }

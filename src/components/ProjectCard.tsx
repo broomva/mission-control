@@ -1,4 +1,5 @@
 import type { Project } from "../bindings";
+import { useLayoutStore } from "../stores/layoutStore";
 import { useProjectStore } from "../stores/projectStore";
 
 interface ProjectCardProps {
@@ -8,6 +9,7 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project, onOpenTerminal }: ProjectCardProps) {
   const { removeProject } = useProjectStore();
+  const { openProjectWorkspace } = useLayoutStore();
 
   return (
     <div className="project-card">
@@ -18,10 +20,19 @@ export function ProjectCard({ project, onOpenTerminal }: ProjectCardProps) {
       <div className="project-card-actions">
         <button
           type="button"
+          className="btn btn-primary"
+          onClick={() =>
+            openProjectWorkspace(project.id, project.name, project.path)
+          }
+        >
+          Open
+        </button>
+        <button
+          type="button"
           className="btn btn-secondary"
           onClick={onOpenTerminal}
         >
-          Terminal
+          + Terminal
         </button>
         <button
           type="button"

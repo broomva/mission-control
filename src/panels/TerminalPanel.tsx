@@ -8,6 +8,7 @@ import { commands, events } from "../bindings";
 
 interface TerminalPanelParams {
   terminalId: string;
+  restoredSession?: boolean;
 }
 
 export function TerminalPanel({
@@ -18,6 +19,7 @@ export function TerminalPanel({
   const fitAddonRef = useRef<FitAddon | null>(null);
 
   const terminalId = params.terminalId;
+  const restoredSession = params.restoredSession ?? false;
 
   const handleResize = useCallback(() => {
     const fitAddon = fitAddonRef.current;
@@ -38,12 +40,30 @@ export function TerminalPanel({
 
     const term = new Terminal({
       fontSize: 13,
-      fontFamily: "Menlo, Monaco, 'Courier New', monospace",
+      fontFamily:
+        "'SF Mono', Menlo, Monaco, 'Cascadia Code', 'Courier New', monospace",
       theme: {
-        background: "#1a1a2e",
-        foreground: "#e0e0e0",
-        cursor: "#e0e0e0",
-        selectionBackground: "#3d3d5c",
+        background: "#0a0a16",
+        foreground: "rgba(255, 255, 255, 0.92)",
+        cursor: "#007AFF",
+        cursorAccent: "#0a0a16",
+        selectionBackground: "rgba(0, 122, 255, 0.25)",
+        black: "#1c1c1e",
+        brightBlack: "#48484a",
+        red: "#FF453A",
+        brightRed: "#FF6961",
+        green: "#30D158",
+        brightGreen: "#4BDE80",
+        yellow: "#FFD60A",
+        brightYellow: "#FFE620",
+        blue: "#007AFF",
+        brightBlue: "#409CFF",
+        magenta: "#BF5AF2",
+        brightMagenta: "#DA8FFF",
+        cyan: "#5AC8FA",
+        brightCyan: "#70D7FF",
+        white: "rgba(255, 255, 255, 0.85)",
+        brightWhite: "rgba(255, 255, 255, 0.95)",
       },
       cursorBlink: true,
       allowProposedApi: true,
@@ -75,6 +95,27 @@ export function TerminalPanel({
         // Ignore initial resize errors
       }
     });
+
+    // Restore scrollback if this is a restored session
+    if (restoredSession) {
+      commands.getTerminalScrollback(terminalId).then((result) => {
+        if (result.status === "ok" && result.data.length > 0) {
+          const bytes = new Uint8Array(result.data);
+          term.write(bytes);
+          term.write(
+            new Uint8Array(
+              new TextEncoder().encode("\r\n[Session restored]\r\n"),
+            ),
+          );
+        } else {
+          term.write(
+            new Uint8Array(
+              new TextEncoder().encode("\r\n[Session exited]\r\n"),
+            ),
+          );
+        }
+      });
+    }
 
     // Input: terminal -> PTY
     const onDataDisposable = term.onData((data) => {
@@ -110,7 +151,7 @@ export function TerminalPanel({
       resizeObserver.disconnect();
       term.dispose();
     };
-  }, [terminalId, handleResize]);
+  }, [terminalId, restoredSession, handleResize]);
 
   return (
     <div

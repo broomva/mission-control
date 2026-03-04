@@ -33,6 +33,17 @@ Run from repository root:
 - Keep command names stable (`smoke`, `check`, `test`, `ci`, `dev`, `build`).
 - Update docs and scripts in the same change when workflow behavior changes.
 
+## Frontend Styling
+
+- Design system uses **Liquid Glass** — translucent surfaces with `backdrop-filter` blur, CSS custom properties, and reusable utility classes.
+- All design tokens live in `src/styles/tokens.css` as CSS custom properties.
+- Style files: `tokens.css` → `base.css` → `glass.css` → `components.css` → `layout.css`, barrel-imported by `src/index.css`.
+- Never hard-code hex colors — use `var(--token-name)`.
+- Glass utilities (`.glass`, `.glass-interactive`, etc.) are in `glass.css`.
+- Existing component class names are preserved — restyle via CSS, not JSX changes.
+- Dockview theme stays `abyss` — overridden via `--dv-*` CSS custom properties.
+- Dark theme only for now.
+
 ## Architecture Boundaries
 
 - Parse and validate all external data (git, filesystem, agent output, PTY) at the Rust boundary layer.

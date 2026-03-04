@@ -69,6 +69,37 @@ Frontend (React/TypeScript)  →  Tauri IPC (typed via specta)  →  Backend (Ru
 5. Rust reader task: Reads PTY output bytes, emits `terminal:data` event
 6. Event → Frontend: xterm.js writes received data to terminal canvas
 
+## Frontend Styling Architecture
+
+The UI uses a **Liquid Glass** design system — translucent surfaces with `backdrop-filter` blur.
+
+```
+src/styles/
+  tokens.css      — CSS custom properties (colors, spacing, typography, glass, shadows)
+  base.css        — Reset, root defaults, scrollbar, focus rings
+  glass.css       — Reusable glass-morphism utilities (.glass, .glass-interactive, etc.)
+  components.css  — Buttons, cards, dialogs, inputs, empty state
+  layout.css      — App shell, sidebar, toolbar, dockview overrides, dashboard grid
+src/index.css     — Barrel import of all style files
+```
+
+- All colors, spacing, and effects are CSS custom properties in `tokens.css`.
+- Glass utilities provide consistent translucent surfaces across all components.
+- Dockview's `abyss` theme is overridden via `--dv-*` custom properties — no theme class changes.
+- Component styles target existing class names — no JSX changes required for restyling.
+
+## Frontend Layout Architecture
+
+```
+AppShell
+├── Sidebar (project list, navigation, add project)
+├── Toolbar (title, context actions)
+└── DockviewWrapper (panel container)
+    ├── ProjectDashboard (project grid when no project active)
+    ├── FileTreePanel (directory browser per project)
+    └── TerminalPanel (xterm.js, multiple per project)
+```
+
 ## Refactor Checklist
 
 - [ ] Boundary contracts unchanged or versioned.

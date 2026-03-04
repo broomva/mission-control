@@ -79,6 +79,30 @@ async listTerminals() : Promise<Result<TerminalInfo[], AppError>> {
     else return { status: "error", error: e  as any };
 }
 },
+async listProjectTerminals(projectId: string) : Promise<Result<TerminalInfo[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_project_terminals", { projectId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getTerminalScrollback(id: string) : Promise<Result<number[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_terminal_scrollback", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async restoreTerminal(id: string, cols: number, rows: number) : Promise<Result<TerminalInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("restore_terminal", { id, cols, rows }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async loadWorkspaceState() : Promise<Result<WorkspaceState, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("load_workspace_state") };
@@ -90,6 +114,14 @@ async loadWorkspaceState() : Promise<Result<WorkspaceState, AppError>> {
 async saveWorkspaceState(state: WorkspaceState) : Promise<Result<null, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("save_workspace_state", { state }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async readDirectory(path: string) : Promise<Result<DirectoryEntry[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("read_directory", { path }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -115,10 +147,11 @@ terminalExitEvent: "terminal-exit-event"
 /** user-defined types **/
 
 export type AppError = { ProjectNotFound: string } | { ProjectAlreadyExists: string } | { TerminalNotFound: string } | { TerminalError: string } | { IoError: string } | { SerializationError: string } | { InvalidPath: string }
+export type DirectoryEntry = { name: string; path: string; is_dir: boolean; is_hidden: boolean }
 export type Project = { id: string; name: string; path: string; created_at: string }
 export type TerminalDataEvent = { terminal_id: string; data: number[] }
 export type TerminalExitEvent = { terminal_id: string }
-export type TerminalInfo = { id: string; project_id: string; title: string; cols: number; rows: number }
+export type TerminalInfo = { id: string; project_id: string; title: string; cols: number; rows: number; cwd: string; created_at: string; status: string; scrollback_path: string | null }
 export type WorkspaceState = { layout: string | null; active_project_id: string | null }
 
 /** tauri-specta globals **/

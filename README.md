@@ -4,8 +4,9 @@ A Tauri 2.0 desktop app for unified terminal management and AI agent orchestrati
 
 ## Features
 
-- **Terminal Multiplexing** — Spawn and manage multiple PTY sessions in dockable panels
-- **Project Management** — Register projects, switch context, persist state
+- **Liquid Glass UI** — Apple-style translucent surfaces with backdrop-filter blur and CSS design tokens
+- **Terminal Multiplexing** — Spawn and manage multiple PTY sessions per project in dockable panels
+- **Project Workspace** — Sidebar navigation, file browser, and multi-terminal workspace per project
 - **Dockable Layout** — Flexible panel arrangement with dockview-react, layout persistence
 - **Typed IPC** — Auto-generated TypeScript bindings from Rust types via specta
 
@@ -55,8 +56,10 @@ Frontend (React 19 / TypeScript)  →  Tauri IPC (typed via specta)  →  Backen
 ### Frontend (React + TypeScript)
 
 - `src/stores/` — Zustand state slices (project, terminal, layout)
-- `src/panels/` — Dockview panel components
-- `src/layout/` — App shell and dock wrapper
+- `src/panels/` — Dockview panel components (dashboard, terminal, file tree)
+- `src/layout/` — App shell, sidebar navigation, dock wrapper
+- `src/components/` — Reusable UI (project card, dialogs)
+- `src/styles/` — Liquid Glass design system (tokens, base, glass, components, layout)
 - `src/bindings.ts` — Auto-generated typed bindings (do not edit)
 
 ### Key Design Decisions
