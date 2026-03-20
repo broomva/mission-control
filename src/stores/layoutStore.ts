@@ -4,9 +4,9 @@ import { commands } from "../bindings";
 
 interface LayoutState {
   dockviewApi: DockviewApi | null;
-  contextPanelTab: "files" | "git";
+  contextPanelTab: "files" | "git" | "agents";
   setDockviewApi: (api: DockviewApi) => void;
-  setContextPanelTab: (tab: "files" | "git") => void;
+  setContextPanelTab: (tab: "files" | "git" | "agents") => void;
   saveLayout: () => Promise<void>;
   loadLayout: () => Promise<string | null>;
   addTerminalPanel: (
@@ -26,6 +26,7 @@ interface LayoutState {
     commitOid: string,
     commitMessage: string,
   ) => void;
+  openAgentPanel: (agentId: string, title: string) => void;
 }
 
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -38,7 +39,7 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
     set({ dockviewApi: api });
   },
 
-  setContextPanelTab: (tab: "files" | "git") => {
+  setContextPanelTab: (tab: "files" | "git" | "agents") => {
     set({ contextPanelTab: tab });
   },
 
@@ -168,6 +169,27 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
       component: "diffviewer",
       title: commitMessage.slice(0, 50),
       params: { projectId, projectPath, commitOid },
+    });
+  },
+
+  openAgentPanel: (agentId: string, title: string) => {
+    const { dockviewApi } = get();
+    if (!dockviewApi) return;
+
+    const panelId = `agent-${agentId}`;
+
+    // If already open, focus it
+    const existing = dockviewApi.panels.find((p) => p.id === panelId);
+    if (existing) {
+      existing.api.setActive();
+      return;
+    }
+
+    dockviewApi.addPanel({
+      id: panelId,
+      component: "agent-terminal",
+      title,
+      params: { agentId },
     });
   },
 }));

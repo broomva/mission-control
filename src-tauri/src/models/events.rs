@@ -23,3 +23,23 @@ pub struct FsChangeEvent {
 pub struct GitRefChangedEvent {
     pub project_id: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+pub struct AgentOutputEvent {
+    pub agent_id: String,
+    pub data: Vec<u8>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+pub struct AgentStatusEvent {
+    pub agent_id: String,
+    pub status: String,
+    pub event: Option<super::agent::AgentEvent>,
+    pub token_usage: Option<super::agent::TokenUsage>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+pub struct AgentExitEvent {
+    pub agent_id: String,
+    pub exit_code: Option<i32>,
+}

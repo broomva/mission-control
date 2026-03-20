@@ -2,14 +2,21 @@ mod commands;
 mod models;
 mod services;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
-use services::{FsWatcherService, GitService, PersistenceService, ProjectService, TerminalService};
+use services::{
+    hook_server, AgentService, FsWatcherService, GitService, PersistenceService, ProjectService,
+    TerminalService,
+};
+use tauri::Manager;
 use tauri_specta::{collect_commands, collect_events, Builder};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-use crate::models::{FsChangeEvent, GitRefChangedEvent, TerminalDataEvent, TerminalExitEvent};
+use crate::models::{
+    AgentExitEvent, AgentOutputEvent, AgentStatusEvent, FsChangeEvent, GitRefChangedEvent,
+    TerminalDataEvent, TerminalExitEvent,
+};
 
 fn create_specta_builder() -> Builder {
     Builder::<tauri::Wry>::new()
@@ -34,12 +41,23 @@ fn create_specta_builder() -> Builder {
             commands::git::git_diff,
             commands::git::git_branches,
             commands::git::watch_project,
+            commands::agent::spawn_agent,
+            commands::agent::stop_agent,
+            commands::agent::resume_agent,
+            commands::agent::write_agent,
+            commands::agent::resize_agent,
+            commands::agent::list_agents,
+            commands::agent::get_agent,
+            commands::agent::get_timeline,
         ])
         .events(collect_events![
             TerminalDataEvent,
             TerminalExitEvent,
             FsChangeEvent,
-            GitRefChangedEvent
+            GitRefChangedEvent,
+            AgentOutputEvent,
+            AgentStatusEvent,
+            AgentExitEvent
         ])
 }
 
@@ -76,11 +94,25 @@ pub fn run() {
     let git_service = GitService::new();
     let fs_watcher_service = FsWatcherService::new();
 
+    // Shared timeline between AgentService and HookServer
+    let shared_timeline = Arc::new(Mutex::new(Vec::new()));
+    let agent_service = AgentService::new(Arc::clone(&shared_timeline));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);
+
+            // Start hook server for Claude Code hooks
+            let app_handle = app.handle().clone();
+            let hook_state = tauri::async_runtime::block_on(async {
+                hook_server::start_hook_server(app_handle, Arc::clone(&shared_timeline))
+                    .await
+                    .expect("failed to start hook server")
+            });
+
+            app.manage(hook_state);
             Ok(())
         })
         .manage(persistence)
@@ -88,6 +120,7 @@ pub fn run() {
         .manage(terminal_service)
         .manage(git_service)
         .manage(fs_watcher_service)
+        .manage(agent_service)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

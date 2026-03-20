@@ -90,6 +90,13 @@
   --git-conflicted: #ff453a;
   --git-deleted: #ff453a;
 
+  /* --- Agent Status --- */
+  --agent-running: #30d158;
+  --agent-waiting: #ffd60a;
+  --agent-error: #ff453a;
+  --agent-idle: rgba(255, 255, 255, 0.38);
+  --agent-completed: var(--accent);
+
   /* --- Terminal (reference; actual values in TSX) --- */
   --terminal-bg: #0a0a16;
   --terminal-cursor: #007aff;

@@ -26,6 +26,12 @@ pub enum AppError {
 
     #[error("Git error: {0}")]
     GitError(String),
+
+    #[error("Agent not found: {0}")]
+    AgentNotFound(String),
+
+    #[error("Agent error: {0}")]
+    AgentError(String),
 }
 
 impl From<git2::Error> for AppError {

@@ -166,6 +166,70 @@ async watchProject(projectId: string, path: string) : Promise<Result<null, AppEr
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async spawnAgent(projectId: string, agentType: string, prompt: string | null, cwd: string) : Promise<Result<AgentInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("spawn_agent", { projectId, agentType, prompt, cwd }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async stopAgent(agentId: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("stop_agent", { agentId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async resumeAgent(agentId: string) : Promise<Result<AgentInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("resume_agent", { agentId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async writeAgent(agentId: string, data: number[]) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("write_agent", { agentId, data }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async resizeAgent(agentId: string, cols: number, rows: number) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("resize_agent", { agentId, cols, rows }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listAgents(projectId: string | null) : Promise<Result<AgentInfo[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_agents", { projectId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getAgent(agentId: string) : Promise<Result<AgentInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_agent", { agentId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getTimeline(projectId: string, offset: number, limit: number) : Promise<Result<AgentEvent[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_timeline", { projectId, offset, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -173,11 +237,17 @@ async watchProject(projectId: string, path: string) : Promise<Result<null, AppEr
 
 
 export const events = __makeEvents__<{
+agentExitEvent: AgentExitEvent,
+agentOutputEvent: AgentOutputEvent,
+agentStatusEvent: AgentStatusEvent,
 fsChangeEvent: FsChangeEvent,
 gitRefChangedEvent: GitRefChangedEvent,
 terminalDataEvent: TerminalDataEvent,
 terminalExitEvent: TerminalExitEvent
 }>({
+agentExitEvent: "agent-exit-event",
+agentOutputEvent: "agent-output-event",
+agentStatusEvent: "agent-status-event",
 fsChangeEvent: "fs-change-event",
 gitRefChangedEvent: "git-ref-changed-event",
 terminalDataEvent: "terminal-data-event",
@@ -190,7 +260,12 @@ terminalExitEvent: "terminal-exit-event"
 
 /** user-defined types **/
 
-export type AppError = { ProjectNotFound: string } | { ProjectAlreadyExists: string } | { TerminalNotFound: string } | { TerminalError: string } | { IoError: string } | { SerializationError: string } | { InvalidPath: string } | { GitError: string }
+export type AgentEvent = { agent_id: string; project_id: string; timestamp: string; event_type: string; summary: string; detail: string | null }
+export type AgentExitEvent = { agent_id: string; exit_code: number | null }
+export type AgentInfo = { id: string; project_id: string; agent_type: string; status: string; prompt: string | null; pid: number | null; session_id: string | null; token_usage: TokenUsage; started_at: string; cwd: string }
+export type AgentOutputEvent = { agent_id: string; data: number[] }
+export type AgentStatusEvent = { agent_id: string; status: string; event: AgentEvent | null; token_usage: TokenUsage | null }
+export type AppError = { ProjectNotFound: string } | { ProjectAlreadyExists: string } | { TerminalNotFound: string } | { TerminalError: string } | { IoError: string } | { SerializationError: string } | { InvalidPath: string } | { GitError: string } | { AgentNotFound: string } | { AgentError: string }
 export type BranchInfo = { name: string; is_head: boolean; upstream: string | null; oid: string }
 export type CommitInfo = { oid: string; short_oid: string; message: string; author: string; author_email: string; timestamp: number; parents: string[]; branch_refs: string[] }
 export type DiffHunk = { header: string; lines: DiffLine[] }
@@ -218,6 +293,7 @@ export type Project = { id: string; name: string; path: string; created_at: stri
 export type TerminalDataEvent = { terminal_id: string; data: number[] }
 export type TerminalExitEvent = { terminal_id: string }
 export type TerminalInfo = { id: string; project_id: string; title: string; cols: number; rows: number; cwd: string; created_at: string; status: string; scrollback_path: string | null }
+export type TokenUsage = { input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_creation_tokens: number; cost_usd: number }
 export type WorkspaceState = { layout: string | null; active_project_id: string | null }
 
 /** tauri-specta globals **/

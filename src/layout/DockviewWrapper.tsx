@@ -5,6 +5,7 @@ import {
 } from "dockview-react";
 import "dockview-react/dist/styles/dockview.css";
 import { useCallback, useEffect, useRef } from "react";
+import { AgentTerminalPanel } from "../panels/AgentTerminalPanel";
 import { DiffViewerPanel } from "../panels/DiffViewerPanel";
 import { ProjectDashboard } from "../panels/ProjectDashboard";
 import { TerminalPanel } from "../panels/TerminalPanel";
@@ -17,6 +18,7 @@ const components: Record<
   dashboard: ProjectDashboard,
   terminal: TerminalPanel,
   diffviewer: DiffViewerPanel,
+  "agent-terminal": AgentTerminalPanel,
 };
 
 export function DockviewWrapper() {

@@ -32,6 +32,8 @@ notify-debouncer-mini = "0.5"
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
 tauri-specta = { version = "=2.0.0-rc.21", features = ["typescript", "derive"] }
 specta-typescript = "0.0.9"
+libc = "0.2"
+axum = "0.8"
 
 [dev-dependencies]
 tempfile = "3"
