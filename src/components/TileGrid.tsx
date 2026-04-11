@@ -3,141 +3,132 @@ import type { AgentInfo } from "../bindings";
 import { useAgentStore } from "../stores/agentStore";
 import { useTileLayoutStore } from "../stores/tileLayoutStore";
 import { AgentTile } from "./AgentTile";
-import { NewAgentTile } from "./NewAgentTile";
 
 interface TileGridProps {
   agents: AgentInfo[];
   onSpawnAgent: () => void;
 }
 
-/**
- * Compute CSS Grid template for a given number of visible tiles (including the [+] tile).
- *
- * Layout rules:
- *   1 tile  -> 1x1
- *   2 tiles -> 2x1
- *   3 tiles -> 2x1 + 1 spanning full width
- *   4 tiles -> 2x2
- *   5-6     -> 3x2
- *   7-9     -> 3x3
- *   10+     -> 3-col scrollable
- */
+const AGENT_LABELS: Record<string, string> = {
+  "claude-code": "Claude",
+  codex: "Codex",
+  gemini: "Gemini",
+  custom: "Custom",
+};
+
 function gridStyle(tileCount: number): React.CSSProperties {
-  if (tileCount <= 0) {
-    return { gridTemplateColumns: "1fr" };
-  }
-  if (tileCount === 1) {
-    return { gridTemplateColumns: "1fr" };
-  }
-  if (tileCount === 2) {
-    return { gridTemplateColumns: "1fr 1fr" };
-  }
-  if (tileCount === 3) {
-    // 2 columns, the 3rd item spans both via CSS class
-    return { gridTemplateColumns: "1fr 1fr" };
-  }
-  if (tileCount === 4) {
-    return { gridTemplateColumns: "1fr 1fr" };
-  }
-  if (tileCount <= 6) {
-    return { gridTemplateColumns: "1fr 1fr 1fr" };
-  }
-  if (tileCount <= 9) {
-    return { gridTemplateColumns: "1fr 1fr 1fr" };
-  }
-  // 10+ -> scrollable 3-col
-  return {
-    gridTemplateColumns: "1fr 1fr 1fr",
-    overflowY: "auto" as const,
-  };
+  if (tileCount <= 1) return { gridTemplateColumns: "1fr" };
+  if (tileCount <= 4) return { gridTemplateColumns: "1fr 1fr" };
+  if (tileCount <= 9) return { gridTemplateColumns: "1fr 1fr 1fr" };
+  return { gridTemplateColumns: "1fr 1fr 1fr", overflowY: "auto" as const };
 }
 
 export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
-  const { maximizedTileId, minimizedTileIds } = useTileLayoutStore();
-  const { maximizeTile, restoreGrid } = useTileLayoutStore();
+  const { maximizedTileId, minimizedTileIds, focusedTileId } =
+    useTileLayoutStore();
+  const { maximizeTile, restoreGrid, setFocusedTile } = useTileLayoutStore();
   const { stopAgent } = useAgentStore();
 
-  const handleCloseAgent = async (agentId: string) => {
-    await stopAgent(agentId);
-  };
-
-  // Filter out minimized agents for the grid
   const visibleAgents = useMemo(
     () => agents.filter((a) => !minimizedTileIds.includes(a.id)),
     [agents, minimizedTileIds],
   );
 
-  // Maximized view: show only that agent
   const maximizedAgent = maximizedTileId
     ? agents.find((a) => a.id === maximizedTileId)
     : null;
 
   if (maximizedAgent) {
     return (
-      <div className="tile-grid tile-grid-maximized">
-        <AgentTile
-          agent={maximizedAgent}
-          onClose={(id) => {
-            restoreGrid();
-            handleCloseAgent(id);
-          }}
-          onMaximize={() => restoreGrid()}
-        />
+      <div className="tile-grid-wrapper">
+        <div className="tile-grid-tabs">
+          {agents.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              className={`tile-grid-tab ${a.id === maximizedTileId ? "tile-grid-tab-active" : ""}`}
+              onClick={() => maximizeTile(a.id)}
+            >
+              <span
+                className={`tile-grid-tab-dot status-${a.status === "running" ? "running" : a.status === "waiting" ? "waiting" : a.status === "error" ? "error" : "idle"}`}
+              />
+              {AGENT_LABELS[a.agent_type] ?? a.agent_type}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="tile-grid-tab-add"
+            onClick={onSpawnAgent}
+            title="New agent"
+          >
+            +
+          </button>
+        </div>
+        <div className="tile-grid tile-grid-maximized">
+          <AgentTile
+            agent={maximizedAgent}
+            onClose={(id) => {
+              restoreGrid();
+              stopAgent(id);
+            }}
+            onMaximize={() => restoreGrid()}
+          />
+        </div>
       </div>
     );
   }
 
-  // Total cells = visible agents + 1 for [+] tile
-  const totalCells = visibleAgents.length + 1;
-  const style = gridStyle(totalCells);
-
-  // Check if the last item in a 3-tile layout needs to span
-  const shouldSpanLast = totalCells === 3;
-
   return (
-    <div className="tile-grid" style={style}>
-      {visibleAgents.map((agent, index) => {
-        const isLastInThreeLayout =
-          shouldSpanLast && index === visibleAgents.length - 1;
-        return (
-          <div
-            key={agent.id}
-            className={`tile-grid-cell ${isLastInThreeLayout ? "tile-grid-cell-span" : ""}`}
+    <div className="tile-grid-wrapper">
+      {/* Tab bar for split view — shows all agents + add button */}
+      <div className="tile-grid-tabs">
+        {agents.map((a) => (
+          <button
+            key={a.id}
+            type="button"
+            className={`tile-grid-tab ${a.id === focusedTileId ? "tile-grid-tab-active" : ""} ${minimizedTileIds.includes(a.id) ? "tile-grid-tab-minimized" : ""}`}
+            onClick={() => {
+              if (minimizedTileIds.includes(a.id)) {
+                useTileLayoutStore.getState().restoreTile(a.id);
+              }
+              setFocusedTile(a.id);
+            }}
           >
+            <span
+              className={`tile-grid-tab-dot status-${a.status === "running" ? "running" : a.status === "waiting" ? "waiting" : a.status === "error" ? "error" : "idle"}`}
+            />
+            {AGENT_LABELS[a.agent_type] ?? a.agent_type}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="tile-grid-tab-add"
+          onClick={onSpawnAgent}
+          title="New agent"
+        >
+          +
+        </button>
+      </div>
+
+      {/* Tile grid */}
+      <div className="tile-grid" style={gridStyle(visibleAgents.length)}>
+        {visibleAgents.map((agent) => (
+          <div key={agent.id} className="tile-grid-cell">
             <AgentTile
               agent={agent}
-              onClose={(id) => handleCloseAgent(id)}
+              onClose={(id) => stopAgent(id)}
               onMaximize={(id) => maximizeTile(id)}
             />
           </div>
-        );
-      })}
-      <div
-        className={`tile-grid-cell ${shouldSpanLast && visibleAgents.length === 2 ? "tile-grid-cell-span" : ""}`}
-      >
-        <NewAgentTile onSpawnAgent={onSpawnAgent} />
+        ))}
       </div>
 
-      {/* Minimized status row */}
-      {minimizedTileIds.length > 0 && (
-        <div className="tile-minimized-row">
-          {minimizedTileIds.map((id) => {
-            const agent = agents.find((a) => a.id === id);
-            if (!agent) return null;
-            return (
-              <button
-                key={id}
-                type="button"
-                className="tile-minimized-chip"
-                onClick={() => useTileLayoutStore.getState().restoreTile(id)}
-              >
-                <span
-                  className={`agent-tile-status-dot ${agent.status === "running" ? "status-running" : agent.status === "waiting" ? "status-waiting" : agent.status === "error" ? "status-error" : "status-idle"}`}
-                />
-                <span>{agent.agent_type}</span>
-              </button>
-            );
-          })}
+      {visibleAgents.length === 0 && (
+        <div className="tile-grid-empty">
+          <p>No agents in split view.</p>
+          <button type="button" className="btn btn-primary" onClick={onSpawnAgent}>
+            Spawn Agent
+          </button>
         </div>
       )}
     </div>
