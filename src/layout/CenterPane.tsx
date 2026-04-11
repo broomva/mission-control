@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ChatView } from "../components/ChatView";
 import { SpawnAgentDialog } from "../components/SpawnAgentDialog";
 import { TileGrid } from "../components/TileGrid";
+import { WorkspaceWelcome } from "../components/WorkspaceWelcome";
 import { useReviewEventListener } from "../hooks/useReviewEventListener";
 import { AgentTerminalPanel } from "../panels/AgentTerminalPanel";
 import { ProjectDashboard } from "../panels/ProjectDashboard";
@@ -215,17 +216,7 @@ export function CenterPane({
           </div>
         )
       ) : (
-        <div className="empty-state">
-          <p>No agents running in this workspace.</p>
-          <p>Spawn one to get started.</p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onOpenSpawnDialog}
-          >
-            Spawn Agent
-          </button>
-        </div>
+        <WorkspaceWelcome onSpawnAgent={onOpenSpawnDialog} />
       )}
 
       {showSpawnDialog && <SpawnAgentDialog onClose={onCloseSpawnDialog} />}

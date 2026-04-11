@@ -7,12 +7,15 @@ import { useLayoutStore } from "../stores/layoutStore";
 import { useProjectStore } from "../stores/projectStore";
 
 type ExplorerTab = "changes" | "files" | "checks";
+type BottomPanelTab = "setup" | "run" | "terminal";
 
 export function FileExplorer() {
   const { rightPaneVisible, toggleRightPane } = useLayoutStore();
   const { projects, activeProjectId } = useProjectStore();
   const { fileStatuses, branches, fetchBranches } = useGitStore();
   const [activeTab, setActiveTab] = useState<ExplorerTab>("changes");
+  const [bottomPanelOpen, setBottomPanelOpen] = useState(false);
+  const [bottomTab, setBottomTab] = useState<BottomPanelTab>("run");
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const statuses = activeProject ? fileStatuses[activeProject.id] : undefined;
@@ -57,7 +60,7 @@ export function FileExplorer() {
           className={`file-explorer-tab ${activeTab === "changes" ? "file-explorer-tab-active" : ""}`}
           onClick={() => setActiveTab("changes")}
         >
-          Changes
+          Changes{statuses && statuses.length > 0 ? ` ${statuses.length}` : ""}
         </button>
         <button
           type="button"
@@ -138,6 +141,72 @@ export function FileExplorer() {
         ) : (
           <div className="review-empty">
             <p>CI checks coming soon.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Collapsible Bottom Panel */}
+      <div className="file-explorer-bottom-panel">
+        <div className="file-explorer-bottom-handle">
+          <button
+            type="button"
+            className={`file-explorer-bottom-tab ${bottomTab === "setup" ? "file-explorer-bottom-tab-active" : ""}`}
+            onClick={() => { setBottomTab("setup"); setBottomPanelOpen(true); }}
+          >
+            Setup
+          </button>
+          <button
+            type="button"
+            className={`file-explorer-bottom-tab ${bottomTab === "run" ? "file-explorer-bottom-tab-active" : ""}`}
+            onClick={() => { setBottomTab("run"); setBottomPanelOpen(true); }}
+          >
+            Run
+          </button>
+          <button
+            type="button"
+            className={`file-explorer-bottom-tab ${bottomTab === "terminal" ? "file-explorer-bottom-tab-active" : ""}`}
+            onClick={() => { setBottomTab("terminal"); setBottomPanelOpen(true); }}
+          >
+            Terminal
+          </button>
+          <button
+            type="button"
+            className="file-explorer-bottom-add"
+            title="Add panel"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className="file-explorer-bottom-toggle"
+            onClick={() => setBottomPanelOpen(!bottomPanelOpen)}
+            title={bottomPanelOpen ? "Collapse" : "Expand"}
+          >
+            {bottomPanelOpen ? "\u02C5" : "\u02C4"}
+          </button>
+        </div>
+
+        {bottomPanelOpen && (
+          <div className="file-explorer-bottom-content">
+            {bottomTab === "setup" && (
+              <>
+                <p style={{ fontWeight: 500, color: "var(--text-secondary)" }}>
+                  Workspace configuration
+                </p>
+                <p>Configure project settings and environment.</p>
+              </>
+            )}
+            {bottomTab === "run" && (
+              <>
+                <button type="button" className="btn btn-secondary">
+                  Add run script
+                </button>
+                <p>Run tests or a dev server to test changes</p>
+              </>
+            )}
+            {bottomTab === "terminal" && (
+              <p>Quick terminal coming soon.</p>
+            )}
           </div>
         )}
       </div>

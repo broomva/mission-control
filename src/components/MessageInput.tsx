@@ -7,6 +7,7 @@ interface MessageInputProps {
 
 export function MessageInput({ agentId }: MessageInputProps) {
   const [message, setMessage] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { writeAgent } = useAgentStore();
 
@@ -44,17 +45,26 @@ export function MessageInput({ agentId }: MessageInputProps) {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
   };
 
+  const isCommand = message.startsWith("/");
+
   return (
     <div className="message-input-bar">
-      <textarea
-        ref={textareaRef}
-        className="message-input-field"
-        value={message}
-        onChange={handleInput}
-        onKeyDown={handleKeyDown}
-        placeholder="Send a message..."
-        rows={1}
-      />
+      <div className="message-input-field-container">
+        <textarea
+          ref={textareaRef}
+          className={`message-input-field${isCommand ? " message-input-command" : ""}`}
+          value={message}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder="Send a message..."
+          rows={1}
+        />
+        {!isFocused && !message && (
+          <span className="message-input-hint">&#8984;L to focus</span>
+        )}
+      </div>
       <div className="message-input-actions">
         <button type="button" className="message-input-btn" title="Attach file">
           +

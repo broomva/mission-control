@@ -64,10 +64,6 @@ export function WorkspaceSidebar() {
     }
   };
 
-  const handleAllProjects = () => {
-    setActiveProject(null);
-  };
-
   const statuses = project ? fileStatuses[project.id] : undefined;
   const projectAgents = project
     ? agents.filter((a) => a.project_id === project.id)
@@ -82,17 +78,42 @@ export function WorkspaceSidebar() {
   return (
     <>
       <aside className="workspace-sidebar">
-        {/* New Session / New Workspace buttons */}
+        {/* History section */}
+        <div className="sidebar-history">
+          <div className="sidebar-history-label">
+            <span className="sidebar-history-icon">&#9201;</span>
+            History
+          </div>
+          <div className="sidebar-history-empty">No recent sessions</div>
+        </div>
+
+        {/* Workspaces header with actions */}
         <div className="sidebar-header">
           <span className="sidebar-label">Workspaces</span>
-          <button
-            type="button"
-            className="btn btn-toolbar sidebar-add-btn"
-            onClick={() => setShowAddDialog(true)}
-            title="Add Workspace"
-          >
-            +
-          </button>
+          <div className="sidebar-header-actions">
+            <button
+              type="button"
+              className="sidebar-header-icon-btn"
+              title="Filter"
+            >
+              &#9707;
+            </button>
+            <button
+              type="button"
+              className="sidebar-header-icon-btn"
+              title="Sort"
+            >
+              &#8693;
+            </button>
+            <button
+              type="button"
+              className="sidebar-header-icon-btn"
+              onClick={() => setShowAddDialog(true)}
+              title="Add Workspace"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {/* Search */}
@@ -116,8 +137,8 @@ export function WorkspaceSidebar() {
               onClick={() => handleProjectClick(proj)}
               title={proj.path}
             >
-              <span className="sidebar-item-icon">
-                {activeProjectId === proj.id ? "\u25C9" : "\u25CB"}
+              <span className="sidebar-item-project-icon">
+                {proj.name.charAt(0).toUpperCase()}
               </span>
               <span className="sidebar-item-name">{proj.name}</span>
             </button>
@@ -201,14 +222,21 @@ export function WorkspaceSidebar() {
           </div>
         )}
 
-        {/* Bottom: user info / all projects */}
-        <div className="sidebar-footer">
+        {/* Bottom: help and settings icons */}
+        <div className="sidebar-footer-icons">
           <button
             type="button"
-            className="btn btn-toolbar sidebar-footer-btn"
-            onClick={handleAllProjects}
+            className="sidebar-footer-icon-btn"
+            title="Help"
           >
-            All Projects
+            ?
+          </button>
+          <button
+            type="button"
+            className="sidebar-footer-icon-btn"
+            title="Settings"
+          >
+            &#9881;
           </button>
         </div>
       </aside>

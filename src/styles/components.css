@@ -15,7 +15,12 @@
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
-    color var(--transition-fast);
+    color var(--transition-fast),
+    transform 60ms ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn:hover:not(:disabled) {
@@ -2201,4 +2206,137 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   min-height: 200px;
+}
+
+/* ============================================================
+   Workspace Welcome — First Screen UX
+   ============================================================ */
+
+/* --- Fade-in Keyframes --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Welcome Container --- */
+.workspace-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-7);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.workspace-welcome-inner {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* --- Banner --- */
+.welcome-banner {
+  background: var(--bg-banner);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  animation: fadeIn 400ms ease;
+}
+
+.welcome-banner-text {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.welcome-banner-icon {
+  font-size: var(--text-lg);
+  color: var(--accent-primary);
+}
+
+/* --- Info Rows --- */
+.welcome-info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.welcome-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  opacity: 0;
+  animation: fadeIn 300ms ease forwards;
+}
+
+.welcome-row:nth-child(1) { animation-delay: 50ms; }
+.welcome-row:nth-child(2) { animation-delay: 100ms; }
+.welcome-row:nth-child(3) { animation-delay: 150ms; }
+
+.welcome-row-icon {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+.welcome-row-highlight {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* --- Quick Action Pills --- */
+.quick-action-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  opacity: 0;
+  animation: fadeIn 300ms ease forwards;
+  animation-delay: 200ms;
+}
+
+.quick-action-pill {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.quick-action-pill:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+  color: var(--text-primary);
+}
+
+.quick-action-pill:active {
+  transform: translateY(0);
+}
+
+/* --- Tab Indicator (animated) --- */
+.tab-indicator {
+  transition: left 200ms cubic-bezier(0.4, 0, 0.2, 1), width 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Scrollbar smooth appearance --- */
+*::-webkit-scrollbar-thumb {
+  transition: background 200ms ease;
 }

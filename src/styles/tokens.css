@@ -3,30 +3,33 @@
    ============================================================ */
 
 :root {
-  /* --- Backgrounds --- */
-  --bg-app: #111116;
-  --bg-sidebar: #18181e;
-  --bg-surface: #1e1e24;
-  --bg-surface-hover: #26262e;
-  --bg-surface-active: #2a2a34;
-  --bg-input: #1a1a22;
+  /* --- Backgrounds (warm dark palette) --- */
+  --bg-app: #191917;
+  --bg-sidebar: #1a1918;
+  --bg-surface: #222220;
+  --bg-surface-hover: #2a2a27;
+  --bg-surface-active: #32322e;
+  --bg-input: #1e1e1c;
+  --bg-banner: #2a2927;
 
-  /* --- Borders --- */
+  /* --- Borders (warmer tones) --- */
   --border-default: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.04);
   --border-hover: rgba(255, 255, 255, 0.10);
   --border-active: rgba(255, 255, 255, 0.14);
 
-  /* --- Text --- */
-  --text-primary: #e4e4ea;
-  --text-secondary: #8a8a96;
-  --text-tertiary: #5a5a66;
-  --text-muted: #3e3e48;
+  /* --- Text (warm off-whites) --- */
+  --text-primary: #e8e4e0;
+  --text-secondary: #8a8680;
+  --text-tertiary: #5a5650;
+  --text-muted: #3e3a34;
 
   /* --- Accent (teal green, Omnara style) --- */
   --accent-primary: #2dd4a8;
   --accent-hover: #3eeabc;
   --accent-subtle: rgba(45, 212, 168, 0.12);
   --accent-text: #2dd4a8;
+  --accent-warm: #e8a84c;
 
   /* --- Semantic --- */
   --color-success: #2dd4a8;
@@ -97,7 +100,7 @@
   --agent-completed: var(--accent-primary);
 
   /* --- Terminal --- */
-  --terminal-bg: #111116;
+  --terminal-bg: #191917;
   --terminal-cursor: #2dd4a8;
   --terminal-selection: rgba(45, 212, 168, 0.20);
 
