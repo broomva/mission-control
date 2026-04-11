@@ -2430,6 +2430,8 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .tile-grid-tabs {
@@ -2523,6 +2525,7 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
+  height: 100%;
 }
 
 .split-horizontal {
@@ -2539,6 +2542,8 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  flex: 1;
+  position: relative;
 }
 
 .split-divider-h {
