@@ -191,6 +191,22 @@ async watchProject(projectId: string, path: string) : Promise<Result<null, AppEr
     else return { status: "error", error: e  as any };
 }
 },
+async gitGraph(projectId: string, path: string, maxCount: number) : Promise<Result<GitGraphData, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("git_graph", { projectId, path, maxCount }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async gitCommitDetail(projectId: string, path: string, sha: string) : Promise<Result<CommitDetail, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("git_commit_detail", { projectId, path, sha }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async spawnAgent(projectId: string, agentType: string, prompt: string | null, cwd: string) : Promise<Result<AgentInfo, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("spawn_agent", { projectId, agentType, prompt, cwd }) };
@@ -291,7 +307,13 @@ export type AgentOutputEvent = { agent_id: string; data: number[] }
 export type AgentStatusEvent = { agent_id: string; status: string; event: AgentEvent | null; token_usage: TokenUsage | null }
 export type AppError = { ProjectNotFound: string } | { ProjectAlreadyExists: string } | { TerminalNotFound: string } | { TerminalError: string } | { IoError: string } | { SerializationError: string } | { InvalidPath: string } | { GitError: string } | { AgentNotFound: string } | { AgentError: string }
 export type BranchInfo = { name: string; is_head: boolean; upstream: string | null; oid: string }
+export type CommitDetail = { sha: string; message: string; author: string; author_email: string; timestamp: number; parent_shas: string[]; files_changed: DiffFile[] }
 export type CommitInfo = { oid: string; short_oid: string; message: string; author: string; author_email: string; timestamp: number; parents: string[]; branch_refs: string[] }
+export type DiffFile = { path: string; 
+/**
+ * "added" | "modified" | "deleted" | "renamed" | "copied" | "unknown"
+ */
+status: string; additions: number; deletions: number }
 export type DiffHunk = { header: string; lines: DiffLine[] }
 export type DiffInfo = { commit_oid: string; files: FileDiff[]; stats: DiffStats }
 export type DiffLine = { 
@@ -312,8 +334,16 @@ export type FileStatusEntry = { path: string;
  */
 status: string }
 export type FsChangeEvent = { project_id: string; paths: string[] }
+export type GitGraphData = { commits: GraphCommit[]; edges: GraphEdge[]; max_lanes: number }
 export type GitRefChangedEvent = { project_id: string }
+export type GraphCommit = { sha: string; short_sha: string; message: string; author: string; author_email: string; timestamp: number; parent_shas: string[]; lane: number; refs: RefLabel[] }
+export type GraphEdge = { from_sha: string; to_sha: string; from_lane: number; to_lane: number }
 export type Project = { id: string; name: string; path: string; created_at: string }
+export type RefLabel = { name: string; 
+/**
+ * "branch" | "tag" | "remote" | "head"
+ */
+kind: string }
 export type TerminalDataEvent = { terminal_id: string; data: number[] }
 export type TerminalExitEvent = { terminal_id: string }
 export type TerminalInfo = { id: string; project_id: string; title: string; cols: number; rows: number; cwd: string; created_at: string; status: string; scrollback_path: string | null }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AddProjectDialog } from "../components/AddProjectDialog";
 import { AgentCard } from "../components/AgentCard";
 import { FileTreeView } from "../components/FileTreeView";
-import { GitLogView } from "../components/GitLogView";
+import { GitGraph } from "../components/GitGraph";
 import { SpawnAgentDialog } from "../components/SpawnAgentDialog";
 import { WorktreeManager } from "../components/WorktreeManager";
 import { useAgentStore } from "../stores/agentStore";
@@ -144,7 +144,7 @@ export function Sidebar() {
               {sidebarTab === "files" ? (
                 <FileTreeView rootPath={project.path} gitStatuses={statuses} />
               ) : sidebarTab === "git" ? (
-                <GitLogView projectId={project.id} projectPath={project.path} />
+                <GitGraph projectId={project.id} projectPath={project.path} />
               ) : sidebarTab === "worktrees" ? (
                 <WorktreeManager
                   projectId={project.id}

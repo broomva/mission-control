@@ -1648,3 +1648,244 @@
   padding: var(--space-2) var(--space-4);
   text-align: center;
 }
+
+/* ============================================================
+   Git Graph — Canvas-based commit visualization (BRO-651)
+   ============================================================ */
+
+.git-graph {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.git-graph-main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.git-graph-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.git-graph-canvas-container {
+  cursor: pointer;
+}
+
+.git-graph-row {
+  display: flex;
+  align-items: center;
+  transition: background var(--transition-fast);
+}
+
+.git-graph-row:hover {
+  background: var(--glass-bg-hover) !important;
+}
+
+.git-graph-lane-area {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.git-graph-commit-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  padding-right: var(--space-4);
+}
+
+/* --- Ref badges --- */
+
+.git-graph-ref {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.git-graph-ref-head {
+  background: var(--accent);
+  color: #fff;
+}
+
+.git-graph-ref-branch {
+  background: var(--success);
+  color: #fff;
+}
+
+.git-graph-ref-tag {
+  background: #ffd60a;
+  color: var(--bg-canvas);
+}
+
+.git-graph-ref-remote {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+}
+
+/* --- Commit row fields --- */
+
+.git-graph-sha {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.git-graph-message {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.git-graph-author {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.git-graph-time {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* --- Commit detail sidebar --- */
+
+.git-graph-detail {
+  width: 240px;
+  border-left: 1px solid var(--glass-border);
+  overflow-y: auto;
+  flex-shrink: 0;
+  padding: var(--space-4);
+}
+
+.git-graph-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.git-graph-detail-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+}
+
+.git-graph-detail-close {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2) !important;
+}
+
+.git-graph-detail-sha {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  color: var(--accent);
+  margin-bottom: var(--space-4);
+  display: inline-block;
+}
+
+.git-graph-detail-message {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+}
+
+.git-graph-detail-author {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.git-graph-detail-time {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-4);
+}
+
+.git-graph-detail-files {
+  margin-top: var(--space-4);
+}
+
+.git-graph-detail-files-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-3);
+}
+
+.git-graph-detail-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.git-graph-detail-file {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.git-graph-detail-file-status {
+  flex-shrink: 0;
+  width: 12px;
+  text-align: center;
+}
+
+.git-graph-detail-file-status-added {
+  color: var(--success);
+}
+
+.git-graph-detail-file-status-modified {
+  color: var(--accent);
+}
+
+.git-graph-detail-file-status-deleted {
+  color: var(--danger);
+}
+
+.git-graph-detail-file-status-renamed {
+  color: var(--accent);
+}
+
+.git-graph-detail-file-status-copied {
+  color: var(--accent);
+}
+
+.git-graph-detail-file-path {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}

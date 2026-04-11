@@ -4,8 +4,8 @@ use std::sync::Mutex;
 use git2::{Oid, Repository, Sort, StatusOptions, WorktreeAddOptions, WorktreePruneOptions};
 
 use crate::models::git::{
-    BranchInfo, CommitInfo, DiffHunk, DiffInfo, DiffLine, DiffStats, FileDiff, FileStatusEntry,
-    WorktreeInfo,
+    BranchInfo, CommitDetail, CommitInfo, DiffFile, DiffHunk, DiffInfo, DiffLine, DiffStats,
+    FileDiff, FileStatusEntry, GitGraphData, GraphCommit, GraphEdge, RefLabel, WorktreeInfo,
 };
 use crate::models::AppError;
 
@@ -504,6 +504,146 @@ impl GitService {
         Ok(())
     }
 
+    // ── Git Graph ─────────────────────────────────────────────────
+
+    pub fn get_graph(
+        &self,
+        project_id: &str,
+        path: &str,
+        max_count: u32,
+    ) -> Result<GitGraphData, AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        let ref_map = build_ref_map(repo);
+
+        let mut revwalk = repo.revwalk()?;
+        revwalk.set_sorting(Sort::TOPOLOGICAL | Sort::TIME)?;
+        revwalk.push_head()?;
+
+        // Also push all local branch heads for a complete graph
+        if let Ok(branches) = repo.branches(Some(git2::BranchType::Local)) {
+            for branch in branches.flatten() {
+                if let Some(target) = branch.0.get().target() {
+                    let _ = revwalk.push(target);
+                }
+            }
+        }
+
+        let limit = max_count as usize;
+        let mut commits = Vec::new();
+
+        for oid_result in revwalk {
+            if commits.len() >= limit {
+                break;
+            }
+
+            let oid = oid_result?;
+            let commit = repo.find_commit(oid)?;
+
+            let sha = oid.to_string();
+            let short_sha = sha[..7.min(sha.len())].to_string();
+            let parent_shas: Vec<String> = commit.parent_ids().map(|id| id.to_string()).collect();
+            let refs = ref_map.get(&oid).cloned().unwrap_or_default();
+
+            commits.push(GraphCommit {
+                sha,
+                short_sha,
+                message: commit.summary().unwrap_or("").to_string(),
+                author: commit.author().name().unwrap_or("Unknown").to_string(),
+                author_email: commit.author().email().unwrap_or("").to_string(),
+                timestamp: commit.time().seconds(),
+                parent_shas,
+                lane: 0,
+                refs,
+            });
+        }
+
+        let (edges, max_lanes) = assign_lanes(&mut commits);
+
+        Ok(GitGraphData {
+            commits,
+            edges,
+            max_lanes: max_lanes as u32,
+        })
+    }
+
+    pub fn get_commit_detail(
+        &self,
+        project_id: &str,
+        path: &str,
+        sha: &str,
+    ) -> Result<CommitDetail, AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        let oid =
+            Oid::from_str(sha).map_err(|e| AppError::GitError(format!("Invalid OID: {}", e)))?;
+        let commit = repo.find_commit(oid)?;
+
+        let parent_shas: Vec<String> = commit.parent_ids().map(|id| id.to_string()).collect();
+
+        // Compute diff
+        let tree = commit.tree()?;
+        let parent_tree = commit.parent(0).ok().and_then(|p| p.tree().ok());
+
+        let diff = repo.diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), None)?;
+
+        let mut files_changed = Vec::new();
+
+        diff.foreach(
+            &mut |delta, _| {
+                let file_path = delta
+                    .new_file()
+                    .path()
+                    .or_else(|| delta.old_file().path())
+                    .map(|p| p.to_string_lossy().to_string())
+                    .unwrap_or_default();
+
+                let status = match delta.status() {
+                    git2::Delta::Added => "added",
+                    git2::Delta::Deleted => "deleted",
+                    git2::Delta::Modified => "modified",
+                    git2::Delta::Renamed => "renamed",
+                    git2::Delta::Copied => "copied",
+                    _ => "unknown",
+                };
+
+                files_changed.push(DiffFile {
+                    path: file_path,
+                    status: status.to_string(),
+                    additions: 0,
+                    deletions: 0,
+                });
+                true
+            },
+            None,
+            None,
+            None,
+        )?;
+
+        let message = commit.message().unwrap_or("").to_string();
+        let author = commit.author().name().unwrap_or("Unknown").to_string();
+        let author_email = commit.author().email().unwrap_or("").to_string();
+        let timestamp = commit.time().seconds();
+
+        Ok(CommitDetail {
+            sha: sha.to_string(),
+            message,
+            author,
+            author_email,
+            timestamp,
+            parent_shas,
+            files_changed,
+        })
+    }
+
     #[allow(dead_code)]
     pub fn refresh_repo(&self, project_id: &str, path: &str) -> Result<(), AppError> {
         let mut repos = self.repos.lock().unwrap();
@@ -512,6 +652,156 @@ impl GitService {
         repos.insert(project_id.to_string(), repo);
         Ok(())
     }
+}
+
+// ── Graph helpers ───────────────────────────────────────────────
+
+fn build_ref_map(repo: &Repository) -> HashMap<Oid, Vec<RefLabel>> {
+    let mut map: HashMap<Oid, Vec<RefLabel>> = HashMap::new();
+
+    // HEAD
+    if let Ok(head) = repo.head() {
+        if let Some(target) = head.target() {
+            map.entry(target).or_default().push(RefLabel {
+                name: "HEAD".to_string(),
+                kind: "head".to_string(),
+            });
+        }
+    }
+
+    // Local branches
+    if let Ok(branches) = repo.branches(Some(git2::BranchType::Local)) {
+        for branch in branches.flatten() {
+            let (branch, _) = branch;
+            if let (Ok(Some(name)), Some(target)) = (branch.name(), branch.get().target()) {
+                map.entry(target).or_default().push(RefLabel {
+                    name: name.to_string(),
+                    kind: "branch".to_string(),
+                });
+            }
+        }
+    }
+
+    // Remote branches
+    if let Ok(branches) = repo.branches(Some(git2::BranchType::Remote)) {
+        for branch in branches.flatten() {
+            let (branch, _) = branch;
+            if let (Ok(Some(name)), Some(target)) = (branch.name(), branch.get().target()) {
+                map.entry(target).or_default().push(RefLabel {
+                    name: name.to_string(),
+                    kind: "remote".to_string(),
+                });
+            }
+        }
+    }
+
+    // Tags
+    if let Ok(tags) = repo.tag_names(None) {
+        for tag_name in tags.iter().flatten() {
+            if let Ok(reference) = repo.find_reference(&format!("refs/tags/{}", tag_name)) {
+                if let Some(target) = reference.target() {
+                    // Resolve annotated tags
+                    let resolved = repo
+                        .find_tag(target)
+                        .map(|t| t.target_id())
+                        .unwrap_or(target);
+                    map.entry(resolved).or_default().push(RefLabel {
+                        name: tag_name.to_string(),
+                        kind: "tag".to_string(),
+                    });
+                }
+            }
+        }
+    }
+
+    map
+}
+
+/// Simple lane assignment: each active branch gets a lane.
+/// When a commit is processed, it frees its lane for parent reuse.
+fn assign_lanes(commits: &mut [GraphCommit]) -> (Vec<GraphEdge>, usize) {
+    let mut edges = Vec::new();
+    let mut active_lanes: Vec<Option<String>> = Vec::new();
+    let mut sha_to_lane: HashMap<String, usize> = HashMap::new();
+    let mut max_lanes: usize = 0;
+
+    for commit in commits.iter_mut() {
+        // Check if this commit already has a reserved lane
+        let lane = if let Some(&existing) = sha_to_lane.get(&commit.sha) {
+            existing
+        } else {
+            // Find first free lane or create a new one
+            let free = active_lanes.iter().position(|l| l.is_none());
+            match free {
+                Some(idx) => {
+                    active_lanes[idx] = Some(commit.sha.clone());
+                    idx
+                }
+                None => {
+                    active_lanes.push(Some(commit.sha.clone()));
+                    active_lanes.len() - 1
+                }
+            }
+        };
+
+        commit.lane = lane as u32;
+        sha_to_lane.insert(commit.sha.clone(), lane);
+        max_lanes = max_lanes.max(active_lanes.len());
+
+        // Free this commit's lane
+        if lane < active_lanes.len() {
+            active_lanes[lane] = None;
+        }
+
+        // Reserve lanes for parents
+        for (i, parent_sha) in commit.parent_shas.iter().enumerate() {
+            if sha_to_lane.contains_key(parent_sha) {
+                // Parent already assigned — just create edge
+                let parent_lane = sha_to_lane[parent_sha];
+                edges.push(GraphEdge {
+                    from_sha: commit.sha.clone(),
+                    to_sha: parent_sha.clone(),
+                    from_lane: lane as u32,
+                    to_lane: parent_lane as u32,
+                });
+            } else if i == 0 {
+                // First parent: reuse this commit's lane
+                sha_to_lane.insert(parent_sha.clone(), lane);
+                if lane < active_lanes.len() {
+                    active_lanes[lane] = Some(parent_sha.clone());
+                }
+                edges.push(GraphEdge {
+                    from_sha: commit.sha.clone(),
+                    to_sha: parent_sha.clone(),
+                    from_lane: lane as u32,
+                    to_lane: lane as u32,
+                });
+            } else {
+                // Additional parent (merge): assign a new lane
+                let free = active_lanes.iter().position(|l| l.is_none());
+                let parent_lane = match free {
+                    Some(idx) => {
+                        active_lanes[idx] = Some(parent_sha.clone());
+                        idx
+                    }
+                    None => {
+                        active_lanes.push(Some(parent_sha.clone()));
+                        active_lanes.len() - 1
+                    }
+                };
+                sha_to_lane.insert(parent_sha.clone(), parent_lane);
+                max_lanes = max_lanes.max(active_lanes.len());
+                edges.push(GraphEdge {
+                    from_sha: commit.sha.clone(),
+                    to_sha: parent_sha.clone(),
+                    from_lane: lane as u32,
+                    to_lane: parent_lane as u32,
+                });
+            }
+        }
+    }
+
+    (edges, max_lanes)
 }
 
 #[cfg(test)]
@@ -730,5 +1020,95 @@ mod tests {
             .unwrap();
         assert_eq!(worktrees.len(), 1);
         assert!(worktrees[0].is_main);
+    }
+
+    #[test]
+    fn test_get_graph() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+
+        create_commit(&repo, tmp.path(), "file1.txt", "hello", "first commit");
+        create_commit(&repo, tmp.path(), "file2.txt", "world", "second commit");
+        create_commit(&repo, tmp.path(), "file3.txt", "three", "third commit");
+
+        let service = GitService::new();
+        let graph = service
+            .get_graph("test", tmp.path().to_str().unwrap(), 500)
+            .unwrap();
+
+        assert_eq!(graph.commits.len(), 3);
+        assert!(graph.max_lanes >= 1);
+        // Topological order: newest first
+        assert!(graph.commits[0].message.contains("third"));
+        assert!(graph.commits[1].message.contains("second"));
+        assert!(graph.commits[2].message.contains("first"));
+        // All on lane 0 for a linear history
+        assert_eq!(graph.commits[0].lane, 0);
+        // Should have edges connecting each commit to its parent
+        assert!(!graph.edges.is_empty());
+    }
+
+    #[test]
+    fn test_get_graph_with_limit() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+
+        create_commit(&repo, tmp.path(), "file1.txt", "a", "commit 1");
+        create_commit(&repo, tmp.path(), "file2.txt", "b", "commit 2");
+        create_commit(&repo, tmp.path(), "file3.txt", "c", "commit 3");
+
+        let service = GitService::new();
+        let graph = service
+            .get_graph("test", tmp.path().to_str().unwrap(), 2)
+            .unwrap();
+
+        assert_eq!(graph.commits.len(), 2);
+    }
+
+    #[test]
+    fn test_get_commit_detail() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+
+        create_commit(&repo, tmp.path(), "file1.txt", "line1\n", "initial");
+        create_commit(
+            &repo,
+            tmp.path(),
+            "file1.txt",
+            "line1\nmodified\n",
+            "modify file",
+        );
+
+        let head = repo.head().unwrap().target().unwrap();
+        let service = GitService::new();
+        let detail = service
+            .get_commit_detail("test", tmp.path().to_str().unwrap(), &head.to_string())
+            .unwrap();
+
+        assert!(detail.message.contains("modify file"));
+        assert_eq!(detail.author, "Test User");
+        assert!(!detail.files_changed.is_empty());
+        assert_eq!(detail.files_changed[0].path, "file1.txt");
+        assert_eq!(detail.files_changed[0].status, "modified");
+    }
+
+    #[test]
+    fn test_get_graph_refs() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let graph = service
+            .get_graph("test", tmp.path().to_str().unwrap(), 500)
+            .unwrap();
+
+        // HEAD commit should have refs
+        let head_commit = &graph.commits[0];
+        assert!(!head_commit.refs.is_empty());
+        // Should have at least a HEAD ref
+        let has_head = head_commit.refs.iter().any(|r| r.kind == "head");
+        assert!(has_head);
     }
 }

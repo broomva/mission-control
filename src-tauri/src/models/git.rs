@@ -73,3 +73,60 @@ pub struct DiffLine {
     pub old_lineno: Option<u32>,
     pub new_lineno: Option<u32>,
 }
+
+// ── Git Graph types ──────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct RefLabel {
+    pub name: String,
+    /// "branch" | "tag" | "remote" | "head"
+    pub kind: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GraphCommit {
+    pub sha: String,
+    pub short_sha: String,
+    pub message: String,
+    pub author: String,
+    pub author_email: String,
+    pub timestamp: i64,
+    pub parent_shas: Vec<String>,
+    pub lane: u32,
+    pub refs: Vec<RefLabel>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GraphEdge {
+    pub from_sha: String,
+    pub to_sha: String,
+    pub from_lane: u32,
+    pub to_lane: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GitGraphData {
+    pub commits: Vec<GraphCommit>,
+    pub edges: Vec<GraphEdge>,
+    pub max_lanes: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CommitDetail {
+    pub sha: String,
+    pub message: String,
+    pub author: String,
+    pub author_email: String,
+    pub timestamp: i64,
+    pub parent_shas: Vec<String>,
+    pub files_changed: Vec<DiffFile>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct DiffFile {
+    pub path: String,
+    /// "added" | "modified" | "deleted" | "renamed" | "copied" | "unknown"
+    pub status: String,
+    pub additions: u32,
+    pub deletions: u32,
+}

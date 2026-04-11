@@ -46,6 +46,8 @@ fn create_specta_builder() -> Builder {
             commands::git::create_worktree,
             commands::git::remove_worktree,
             commands::git::watch_project,
+            commands::git::git_graph,
+            commands::git::git_commit_detail,
             commands::agent::spawn_agent,
             commands::agent::stop_agent,
             commands::agent::resume_agent,

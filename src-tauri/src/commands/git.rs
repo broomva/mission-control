@@ -1,6 +1,8 @@
 use tauri::{AppHandle, State};
 
-use crate::models::git::{BranchInfo, CommitInfo, DiffInfo, FileStatusEntry, WorktreeInfo};
+use crate::models::git::{
+    BranchInfo, CommitDetail, CommitInfo, DiffInfo, FileStatusEntry, GitGraphData, WorktreeInfo,
+};
 use crate::models::AppError;
 use crate::services::{FsWatcherService, GitService};
 
@@ -89,4 +91,26 @@ pub fn watch_project(
     app_handle: AppHandle,
 ) -> Result<(), AppError> {
     service.watch(&project_id, &path, app_handle)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn git_graph(
+    project_id: String,
+    path: String,
+    max_count: u32,
+    service: State<'_, GitService>,
+) -> Result<GitGraphData, AppError> {
+    service.get_graph(&project_id, &path, max_count)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn git_commit_detail(
+    project_id: String,
+    path: String,
+    sha: String,
+    service: State<'_, GitService>,
+) -> Result<CommitDetail, AppError> {
+    service.get_commit_detail(&project_id, &path, &sha)
 }
