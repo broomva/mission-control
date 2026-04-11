@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { SpawnAgentDialog } from "../components/SpawnAgentDialog";
 import { TileGrid } from "../components/TileGrid";
+import { useReviewEventListener } from "../hooks/useReviewEventListener";
 import { ProjectDashboard } from "../panels/ProjectDashboard";
 import { useAgentStore } from "../stores/agentStore";
 import { useProjectStore } from "../stores/projectStore";
@@ -18,6 +19,9 @@ export function CenterPane({
 }: CenterPaneProps) {
   const { activeProjectId } = useProjectStore();
   const { agents, fetchAgents, setupEventListeners } = useAgentStore();
+
+  // Wire agent file_write events to review queue
+  useReviewEventListener();
 
   // Fetch agents when the active project changes
   useEffect(() => {

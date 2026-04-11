@@ -1,3 +1,4 @@
+import { ReviewQueue } from "../components/ReviewQueue";
 import { useLayoutStore } from "../stores/layoutStore";
 
 export function ReviewPane() {
@@ -19,10 +20,7 @@ export function ReviewPane() {
         </button>
       </div>
       <div className="review-pane-body">
-        <div className="empty-state">
-          <p>No pending changes.</p>
-          <p>Agent diffs will appear here for review.</p>
-        </div>
+        <ReviewQueue />
       </div>
     </aside>
   );

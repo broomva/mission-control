@@ -1416,3 +1416,235 @@
   font-size: var(--text-sm);
   padding: var(--space-2) 0;
 }
+
+/* ============================================================
+   Review Queue (BRO-630)
+   ============================================================ */
+
+.review-queue {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.review-section {
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.review-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.review-section-header:hover {
+  background: var(--glass-bg-hover);
+}
+
+.review-section-toggle {
+  color: var(--text-tertiary);
+  width: 12px;
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+}
+
+.review-section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.review-section-body {
+  padding: 0;
+}
+
+.review-empty {
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.review-empty p {
+  margin-bottom: var(--space-2);
+}
+
+/* --- Agent Group --- */
+
+.review-agent-group {
+  border-top: 1px solid var(--glass-border);
+}
+
+.review-agent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  background: var(--glass-bg);
+}
+
+.review-agent-name {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.review-batch-actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.review-batch-btn {
+  font-size: var(--text-xs) !important;
+  padding: var(--space-1) var(--space-2) !important;
+}
+
+/* --- Entry Row --- */
+
+.review-entry {
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background var(--transition-fast);
+}
+
+.review-entry:hover {
+  background: var(--glass-bg-hover);
+}
+
+.review-entry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.review-entry-path {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.review-entry-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.review-entry-add {
+  color: var(--success);
+}
+
+.review-entry-del {
+  color: var(--danger);
+}
+
+.review-entry-status-icon {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.review-entry-accepted .review-entry-status-icon {
+  color: var(--success);
+}
+
+.review-entry-rejected .review-entry-status-icon {
+  color: var(--danger);
+}
+
+.review-entry-accepted .review-entry-path {
+  color: var(--text-tertiary);
+}
+
+.review-entry-rejected .review-entry-path {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+/* --- Entry Actions --- */
+
+.review-entry-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.review-entry-actions .btn {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.review-action-accept {
+  padding: var(--space-1) var(--space-3) !important;
+  font-size: var(--text-xs) !important;
+}
+
+.review-action-reject {
+  padding: var(--space-1) var(--space-3) !important;
+  font-size: var(--text-xs) !important;
+}
+
+/* --- Inline Diff --- */
+
+.review-entry-diff {
+  margin-top: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-canvas);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+
+.review-diff-content {
+  margin: 0;
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.review-diff-empty {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* --- Clear Button --- */
+
+.review-clear-actions {
+  padding: var(--space-2) var(--space-4);
+  text-align: center;
+}
