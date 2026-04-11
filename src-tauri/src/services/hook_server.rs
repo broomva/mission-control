@@ -125,11 +125,19 @@ fn resolve_agent_id(
     query_agent_id: &Option<String>,
     session_id: &Option<String>,
     session_map: &Mutex<HashMap<String, String>>,
+    registered_agents: &Mutex<HashMap<String, HookAgentContext>>,
 ) -> Option<String> {
     // Primary: query parameter
     if let Some(id) = query_agent_id {
         if !id.is_empty() {
-            return Some(id.clone());
+            // Only accept if this agent_id is registered with Mission Control
+            if let Ok(agents) = registered_agents.lock() {
+                if agents.contains_key(id) {
+                    return Some(id.clone());
+                }
+            }
+            // Unknown agent_id — likely from an external Claude session
+            return None;
         }
     }
     // Fallback: session_id -> agent_id map
@@ -187,7 +195,7 @@ async fn handle_session_start(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => {
             warn!("session-start: could not resolve agent_id");
@@ -220,7 +228,7 @@ async fn handle_pre_tool_use(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => return,
     };
@@ -289,7 +297,7 @@ async fn handle_post_tool_use(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => return,
     };
@@ -308,7 +316,7 @@ async fn handle_post_tool_use_failure(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => return,
     };
@@ -327,7 +335,7 @@ async fn handle_stop(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => return,
     };
@@ -357,7 +365,7 @@ async fn handle_subagent_start(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => return,
     };
@@ -375,7 +383,7 @@ async fn handle_subagent_stop(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => return,
     };
@@ -393,7 +401,7 @@ async fn handle_notification(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => return,
     };
@@ -411,7 +419,7 @@ async fn handle_session_end(
     State(state): State<AppState>,
     Json(payload): Json<HookPayload>,
 ) {
-    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map) {
+    let agent_id = match resolve_agent_id(&q.agent_id, &payload.session_id, &state.session_map, &state.agents) {
         Some(id) => id,
         None => return,
     };
@@ -515,35 +523,58 @@ pub async fn start_hook_server(
 mod tests {
     use super::*;
 
+    fn make_registered_agents(ids: &[&str]) -> Mutex<HashMap<String, HookAgentContext>> {
+        let mut map = HashMap::new();
+        for id in ids {
+            map.insert(id.to_string(), HookAgentContext {
+                project_id: "proj-1".to_string(),
+                project_path: None,
+            });
+        }
+        Mutex::new(map)
+    }
+
     #[test]
-    fn test_resolve_agent_id_from_query() {
+    fn test_resolve_agent_id_from_query_registered() {
         let session_map = Mutex::new(HashMap::new());
-        let result = resolve_agent_id(&Some("agent-123".to_string()), &None, &session_map);
+        let agents = make_registered_agents(&["agent-123"]);
+        let result = resolve_agent_id(&Some("agent-123".to_string()), &None, &session_map, &agents);
         assert_eq!(result, Some("agent-123".to_string()));
+    }
+
+    #[test]
+    fn test_resolve_agent_id_from_query_unregistered() {
+        let session_map = Mutex::new(HashMap::new());
+        let agents = make_registered_agents(&[]); // no registered agents
+        let result = resolve_agent_id(&Some("external-agent".to_string()), &None, &session_map, &agents);
+        assert_eq!(result, None); // rejected — not registered
     }
 
     #[test]
     fn test_resolve_agent_id_from_session_map() {
         let session_map = Mutex::new(HashMap::new());
+        let agents = make_registered_agents(&[]);
         session_map
             .lock()
             .unwrap()
             .insert("sess-abc".to_string(), "agent-456".to_string());
 
-        let result = resolve_agent_id(&None, &Some("sess-abc".to_string()), &session_map);
+        let result = resolve_agent_id(&None, &Some("sess-abc".to_string()), &session_map, &agents);
         assert_eq!(result, Some("agent-456".to_string()));
     }
 
     #[test]
     fn test_resolve_agent_id_none() {
         let session_map = Mutex::new(HashMap::new());
-        let result = resolve_agent_id(&None, &None, &session_map);
+        let agents = make_registered_agents(&[]);
+        let result = resolve_agent_id(&None, &None, &session_map, &agents);
         assert_eq!(result, None);
     }
 
     #[test]
     fn test_resolve_agent_id_query_takes_precedence() {
         let session_map = Mutex::new(HashMap::new());
+        let agents = make_registered_agents(&["agent-from-query"]);
         session_map
             .lock()
             .unwrap()
@@ -553,6 +584,7 @@ mod tests {
             &Some("agent-from-query".to_string()),
             &Some("sess-abc".to_string()),
             &session_map,
+            &agents,
         );
         assert_eq!(result, Some("agent-from-query".to_string()));
     }
