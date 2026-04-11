@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { AgentInfo } from "../bindings";
 import { useAgentStore } from "../stores/agentStore";
+import type { SplitDirection } from "../stores/tileLayoutStore";
 import { useTileLayoutStore } from "../stores/tileLayoutStore";
 import { AgentTile } from "./AgentTile";
 import { SplitContainer } from "./SplitContainer";
@@ -33,6 +34,20 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
   } = useTileLayoutStore();
   const { maximizeTile, restoreGrid, setFocusedTile } = useTileLayoutStore();
   const { stopAgent, removeAgent } = useAgentStore();
+  const [tabMenuId, setTabMenuId] = useState<string | null>(null);
+  const tabMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close tab context menu on outside click
+  const handleTabContextMenu = useCallback((e: React.MouseEvent, agentId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setTabMenuId(tabMenuId === agentId ? null : agentId);
+  }, [tabMenuId]);
+
+  const handleSplitTab = useCallback((_direction: SplitDirection) => {
+    setTabMenuId(null);
+    onSpawnAgent();
+  }, [onSpawnAgent]);
 
   const handleCloseAgent = async (id: string) => {
     useTileLayoutStore.getState().removeFromSplit(id);
@@ -97,19 +112,21 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
       {/* Tab bar for split view — shows all agents + add button */}
       <div className="tile-grid-tabs">
         {agents.map((a) => (
-          <button
-            key={a.id}
-            type="button"
-            className={`tile-grid-tab ${a.id === focusedTileId ? "tile-grid-tab-active" : ""} ${minimizedTileIds.includes(a.id) ? "tile-grid-tab-minimized" : ""}`}
-            onClick={() => {
-              if (minimizedTileIds.includes(a.id)) {
-                useTileLayoutStore.getState().restoreTile(a.id);
-              }
-              setFocusedTile(a.id);
-            }}
-          >
-            <span
-              className={`tile-grid-tab-dot status-${a.status === "running" ? "running" : a.status === "waiting" ? "waiting" : a.status === "error" ? "error" : "idle"}`}
+          <div key={a.id} className="tile-grid-tab-wrapper">
+            <button
+              type="button"
+              className={`tile-grid-tab ${a.id === focusedTileId ? "tile-grid-tab-active" : ""} ${minimizedTileIds.includes(a.id) ? "tile-grid-tab-minimized" : ""}`}
+              onClick={() => {
+                if (minimizedTileIds.includes(a.id)) {
+                  useTileLayoutStore.getState().restoreTile(a.id);
+                }
+                setFocusedTile(a.id);
+                setTabMenuId(null);
+              }}
+              onContextMenu={(e) => handleTabContextMenu(e, a.id)}
+            >
+              <span
+                className={`tile-grid-tab-dot status-${a.status === "running" ? "running" : a.status === "waiting" ? "waiting" : a.status === "error" ? "error" : "idle"}`}
             />
             {AGENT_LABELS[a.agent_type] ?? a.agent_type}
             <span
@@ -125,6 +142,20 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
               ×
             </span>
           </button>
+          {tabMenuId === a.id && (
+            <div className="tile-tab-context-menu" ref={tabMenuRef}>
+              <button type="button" onClick={() => handleSplitTab("horizontal")}>
+                Split Right ⬌
+              </button>
+              <button type="button" onClick={() => handleSplitTab("vertical")}>
+                Split Down ⬍
+              </button>
+              <button type="button" onClick={() => { setTabMenuId(null); handleCloseAgent(a.id); }}>
+                Close
+              </button>
+            </div>
+          )}
+          </div>
         ))}
         <button
           type="button"

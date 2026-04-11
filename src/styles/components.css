@@ -2588,3 +2588,49 @@
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-error, #ef4444);
 }
+
+.tile-grid-tab-wrapper {
+  position: relative;
+}
+
+.tile-tab-context-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) 0;
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tile-tab-context-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.tile-tab-context-menu button:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.tile-tab-context-menu button:last-child {
+  color: var(--color-error, #ef4444);
+}
+
+.tile-tab-context-menu button:last-child:hover {
+  background: rgba(239, 68, 68, 0.1);
+}

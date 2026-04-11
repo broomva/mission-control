@@ -55,7 +55,7 @@ function SplitPane({
   onClose,
   onMaximize,
 }: SplitPaneProps) {
-  const { updateSplitRatio } = useTileLayoutStore();
+  const { updateSplitRatio, toggleSplitDirection } = useTileLayoutStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -140,9 +140,11 @@ function SplitPane({
       <div
         className={`${dividerClass}${isDragging ? " split-divider-active" : ""}`}
         onMouseDown={handleMouseDown}
+        onDoubleClick={() => toggleSplitDirection(path)}
         role="separator"
         aria-orientation={isHorizontal ? "vertical" : "horizontal"}
-        aria-label="Resize split pane"
+        aria-label="Resize split pane (double-click to toggle direction)"
+        title="Drag to resize · Double-click to toggle direction"
       />
       <div className="split-pane" style={secondStyle}>
         <SplitContainer

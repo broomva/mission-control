@@ -104,6 +104,7 @@ interface TileLayoutState {
   updateSplitRatio: (path: number[], ratio: number) => void;
   addToSplit: (agentId: string) => void;
   removeFromSplit: (agentId: string) => void;
+  toggleSplitDirection: (path: number[]) => void;
 }
 
 export const useTileLayoutStore = create<TileLayoutState>((set) => ({
@@ -209,6 +210,20 @@ export const useTileLayoutStore = create<TileLayoutState>((set) => ({
       };
 
       const updated = replaceAtPath(state.splitLayout, targetPath, newSplit);
+      return { splitLayout: updated };
+    });
+  },
+
+  toggleSplitDirection: (path: number[]) => {
+    set((state) => {
+      if (!state.splitLayout) return state;
+      const node = getNodeAtPath(state.splitLayout, path);
+      if (!node || node.type !== "split") return state;
+      const toggled = {
+        ...node,
+        direction: (node.direction === "horizontal" ? "vertical" : "horizontal") as SplitDirection,
+      };
+      const updated = replaceAtPath(state.splitLayout, path, toggled);
       return { splitLayout: updated };
     });
   },
