@@ -76,9 +76,7 @@ describe("reviewStore", () => {
   describe("acceptAllForAgent", () => {
     it("accepts all pending entries for a specific agent", () => {
       useReviewStore.getState().addEntry(makeEntry());
-      useReviewStore
-        .getState()
-        .addEntry(makeEntry({ filePath: "src/api.ts" }));
+      useReviewStore.getState().addEntry(makeEntry({ filePath: "src/api.ts" }));
       useReviewStore.getState().addEntry(
         makeEntry({
           agentId: "agent-2",
@@ -97,9 +95,7 @@ describe("reviewStore", () => {
 
     it("does not affect already-rejected entries", () => {
       useReviewStore.getState().addEntry(makeEntry());
-      useReviewStore
-        .getState()
-        .addEntry(makeEntry({ filePath: "src/api.ts" }));
+      useReviewStore.getState().addEntry(makeEntry({ filePath: "src/api.ts" }));
       const firstId = useReviewStore.getState().entries[0]?.id as string;
 
       useReviewStore.getState().rejectEntry(firstId);
@@ -146,12 +142,8 @@ describe("reviewStore", () => {
   describe("clearApplied", () => {
     it("removes accepted and rejected entries, keeps pending", () => {
       useReviewStore.getState().addEntry(makeEntry());
-      useReviewStore
-        .getState()
-        .addEntry(makeEntry({ filePath: "src/api.ts" }));
-      useReviewStore
-        .getState()
-        .addEntry(makeEntry({ filePath: "src/lib.rs" }));
+      useReviewStore.getState().addEntry(makeEntry({ filePath: "src/api.ts" }));
+      useReviewStore.getState().addEntry(makeEntry({ filePath: "src/lib.rs" }));
 
       const entries = useReviewStore.getState().entries;
       useReviewStore.getState().acceptEntry(entries[0]?.id as string);

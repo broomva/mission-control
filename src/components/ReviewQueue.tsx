@@ -66,112 +66,106 @@ export function ReviewQueue() {
                 <p>Agent diffs will appear here for review.</p>
               </div>
             ) : (
-              Array.from(pendingByAgent.entries()).map(
-                ([agentId, group]) => (
-                  <div key={agentId} className="review-agent-group">
-                    <div className="review-agent-header">
-                      <span className="review-agent-name">
-                        {group.agentName}
-                      </span>
-                      <div className="review-batch-actions">
-                        <button
-                          type="button"
-                          className="btn btn-toolbar review-batch-btn"
-                          onClick={() => acceptAllForAgent(agentId)}
-                          title="Accept all for this agent"
-                        >
-                          Accept All
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-toolbar review-batch-btn"
-                          onClick={() => rejectAllForAgent(agentId)}
-                          title="Reject all for this agent"
-                        >
-                          Reject All
-                        </button>
-                      </div>
+              Array.from(pendingByAgent.entries()).map(([agentId, group]) => (
+                <div key={agentId} className="review-agent-group">
+                  <div className="review-agent-header">
+                    <span className="review-agent-name">{group.agentName}</span>
+                    <div className="review-batch-actions">
+                      <button
+                        type="button"
+                        className="btn btn-toolbar review-batch-btn"
+                        onClick={() => acceptAllForAgent(agentId)}
+                        title="Accept all for this agent"
+                      >
+                        Accept All
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-toolbar review-batch-btn"
+                        onClick={() => rejectAllForAgent(agentId)}
+                        title="Reject all for this agent"
+                      >
+                        Reject All
+                      </button>
                     </div>
-
-                    {group.entries.map((entry) => (
-                      <div key={entry.id} className="review-entry">
-                        <div className="review-entry-row">
-                          <span className="review-entry-path">
-                            {entry.filePath}
-                          </span>
-                          <span className="review-entry-stats">
-                            <span className="review-entry-add">
-                              +{entry.additions}
-                            </span>
-                            <span className="review-entry-del">
-                              -{entry.deletions}
-                            </span>
-                          </span>
-                        </div>
-                        <div className="review-entry-actions">
-                          <button
-                            type="button"
-                            className="btn btn-toolbar"
-                            onClick={() => handleViewDiff(entry.id)}
-                          >
-                            {expandedEntryId === entry.id
-                              ? "Hide Diff"
-                              : "View Diff"}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-primary review-action-accept"
-                            onClick={() => acceptEntry(entry.id)}
-                          >
-                            Accept
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-danger review-action-reject"
-                            onClick={() => rejectEntry(entry.id)}
-                          >
-                            Reject
-                          </button>
-                        </div>
-
-                        {expandedEntryId === entry.id && (
-                          <div className="review-entry-diff">
-                            {entry.diffContent ? (
-                              <pre className="review-diff-content">
-                                {entry.diffContent
-                                  .split("\n")
-                                  .map((line, i) => (
-                                    <div
-                                      key={`${entry.id}-line-${i}`}
-                                      className={
-                                        line.startsWith("+")
-                                          ? "diff-line diff-line-add"
-                                          : line.startsWith("-")
-                                            ? "diff-line diff-line-del"
-                                            : "diff-line diff-line-context"
-                                      }
-                                    >
-                                      <span className="diff-line-origin">
-                                        {line.charAt(0) || " "}
-                                      </span>
-                                      <span className="diff-line-content">
-                                        {line.slice(1)}
-                                      </span>
-                                    </div>
-                                  ))}
-                              </pre>
-                            ) : (
-                              <p className="review-diff-empty">
-                                No diff content available.
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
                   </div>
-                ),
-              )
+
+                  {group.entries.map((entry) => (
+                    <div key={entry.id} className="review-entry">
+                      <div className="review-entry-row">
+                        <span className="review-entry-path">
+                          {entry.filePath}
+                        </span>
+                        <span className="review-entry-stats">
+                          <span className="review-entry-add">
+                            +{entry.additions}
+                          </span>
+                          <span className="review-entry-del">
+                            -{entry.deletions}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="review-entry-actions">
+                        <button
+                          type="button"
+                          className="btn btn-toolbar"
+                          onClick={() => handleViewDiff(entry.id)}
+                        >
+                          {expandedEntryId === entry.id
+                            ? "Hide Diff"
+                            : "View Diff"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary review-action-accept"
+                          onClick={() => acceptEntry(entry.id)}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-danger review-action-reject"
+                          onClick={() => rejectEntry(entry.id)}
+                        >
+                          Reject
+                        </button>
+                      </div>
+
+                      {expandedEntryId === entry.id && (
+                        <div className="review-entry-diff">
+                          {entry.diffContent ? (
+                            <pre className="review-diff-content">
+                              {entry.diffContent.split("\n").map((line, i) => (
+                                <div
+                                  key={`${entry.id}-line-${i}`}
+                                  className={
+                                    line.startsWith("+")
+                                      ? "diff-line diff-line-add"
+                                      : line.startsWith("-")
+                                        ? "diff-line diff-line-del"
+                                        : "diff-line diff-line-context"
+                                  }
+                                >
+                                  <span className="diff-line-origin">
+                                    {line.charAt(0) || " "}
+                                  </span>
+                                  <span className="diff-line-content">
+                                    {line.slice(1)}
+                                  </span>
+                                </div>
+                              ))}
+                            </pre>
+                          ) : (
+                            <p className="review-diff-empty">
+                              No diff content available.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))
             )}
           </div>
         )}

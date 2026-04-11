@@ -37,8 +37,7 @@ export function useKeyboardShortcuts(config: KeyboardShortcutConfig) {
 
       // Escape — restore grid view if a tile is maximized
       if (event.key === "Escape") {
-        const { maximizedTileId, restoreGrid } =
-          useTileLayoutStore.getState();
+        const { maximizedTileId, restoreGrid } = useTileLayoutStore.getState();
         if (maximizedTileId) {
           event.preventDefault();
           restoreGrid();

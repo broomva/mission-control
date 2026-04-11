@@ -34,10 +34,7 @@ export const useReviewStore = create<ReviewState>((set) => ({
   addEntry: (entry) => {
     const id = `review-${Date.now()}-${counter++}`;
     set((state) => ({
-      entries: [
-        ...state.entries,
-        { ...entry, id, status: "pending" as const },
-      ],
+      entries: [...state.entries, { ...entry, id, status: "pending" as const }],
     }));
   },
 

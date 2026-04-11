@@ -86,9 +86,7 @@ function WorktreeRow({
       <div className="worktree-row-info">
         <div className="worktree-row-name">
           <span>{worktree.name}</span>
-          {worktree.is_main && (
-            <span className="branch-badge">main</span>
-          )}
+          {worktree.is_main && <span className="branch-badge">main</span>}
         </div>
         {worktree.branch && (
           <div className="worktree-row-branch">{worktree.branch}</div>

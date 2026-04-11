@@ -166,9 +166,7 @@ describe("useKeyboardShortcuts", () => {
     renderHook(() => useKeyboardShortcuts(config));
     fireKey("M", { metaKey: true, shiftKey: true });
 
-    expect(useTileLayoutStore.getState().minimizedTileIds).toContain(
-      "agent-1",
-    );
+    expect(useTileLayoutStore.getState().minimizedTileIds).toContain("agent-1");
   });
 
   it("Cmd+Shift+M does nothing when no tile is focused", () => {

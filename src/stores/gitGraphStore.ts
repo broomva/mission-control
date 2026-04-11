@@ -12,11 +12,7 @@ interface GitGraphState {
     path: string,
     maxCount?: number,
   ) => Promise<void>;
-  selectCommit: (
-    projectId: string,
-    path: string,
-    sha: string,
-  ) => Promise<void>;
+  selectCommit: (projectId: string, path: string, sha: string) => Promise<void>;
   clearSelection: () => void;
 }
 
@@ -25,17 +21,9 @@ export const useGitGraphStore = create<GitGraphState>((set) => ({
   selectedCommit: null,
   loading: false,
 
-  fetchGraph: async (
-    projectId: string,
-    path: string,
-    maxCount?: number,
-  ) => {
+  fetchGraph: async (projectId: string, path: string, maxCount?: number) => {
     set({ loading: true });
-    const result = await commands.gitGraph(
-      projectId,
-      path,
-      maxCount ?? 500,
-    );
+    const result = await commands.gitGraph(projectId, path, maxCount ?? 500);
     if (result.status === "ok") {
       set({ graphData: result.data, loading: false });
     } else {

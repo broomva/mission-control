@@ -40,7 +40,9 @@ export function CreateWorktreeDialog({
     if (result) {
       onClose();
     } else {
-      setError("Failed to create worktree. Check if the name is already in use.");
+      setError(
+        "Failed to create worktree. Check if the name is already in use.",
+      );
     }
   };
 
@@ -82,9 +84,7 @@ export function CreateWorktreeDialog({
             placeholder="feature/my-branch"
           />
         </div>
-        {error && (
-          <div className="worktree-error">{error}</div>
-        )}
+        {error && <div className="worktree-error">{error}</div>}
         <div className="dialog-actions">
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             Cancel

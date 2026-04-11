@@ -2,6 +2,8 @@
    Base — Reset, root defaults, scrollbar, focus rings
    ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 *,
 *::before,
 *::after {
@@ -24,7 +26,7 @@ body,
   line-height: 1.5;
   font-weight: 400;
   color: var(--text-primary);
-  background-color: var(--bg-base);
+  background-color: var(--bg-app);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -33,9 +35,10 @@ body,
 
 ::selection {
   background: var(--accent-subtle);
+  color: var(--accent-text);
 }
 
-/* --- Scrollbar --- */
+/* --- Scrollbar — thin, transparent, appear on hover only --- */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -46,16 +49,33 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent;
   border-radius: 3px;
+  transition: background 200ms ease;
 }
 
+*:hover > ::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* --- Focus Ring --- */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
+}
+
+/* --- Links --- */
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
 }

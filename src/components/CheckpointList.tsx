@@ -7,7 +7,10 @@ interface CheckpointListProps {
   projectPath: string;
 }
 
-export function CheckpointList({ projectId, projectPath }: CheckpointListProps) {
+export function CheckpointList({
+  projectId,
+  projectPath,
+}: CheckpointListProps) {
   const {
     checkpoints,
     loading,
@@ -49,7 +52,10 @@ export function CheckpointList({ projectId, projectPath }: CheckpointListProps) 
     if (!timestamp) return "";
     try {
       const date = new Date(timestamp);
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } catch {
       return "";
     }
@@ -78,7 +84,9 @@ export function CheckpointList({ projectId, projectPath }: CheckpointListProps) 
           ) : checkpoints.length === 0 ? (
             <div className="checkpoint-empty">
               <p>No checkpoints yet.</p>
-              <p>Checkpoints are created automatically before agent tool use.</p>
+              <p>
+                Checkpoints are created automatically before agent tool use.
+              </p>
             </div>
           ) : (
             <div className="checkpoint-list">

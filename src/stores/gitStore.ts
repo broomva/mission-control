@@ -110,11 +110,7 @@ export const useGitStore = create<GitState>((set, get) => ({
     return null;
   },
 
-  removeWorktree: async (
-    projectId: string,
-    path: string,
-    name: string,
-  ) => {
+  removeWorktree: async (projectId: string, path: string, name: string) => {
     const result = await commands.removeWorktree(projectId, path, name);
     if (result.status === "ok") {
       // Refresh the worktree list

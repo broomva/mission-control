@@ -101,9 +101,7 @@ export function CredentialSettings({ onClose }: CredentialSettingsProps) {
         {/* Configured credentials */}
         <div className="credential-list-section">
           <h4 className="credential-section-title">Configured Services</h4>
-          {loading && (
-            <p className="credential-loading">Loading...</p>
-          )}
+          {loading && <p className="credential-loading">Loading...</p>}
           {!loading && services.length === 0 && (
             <p className="credential-empty">
               No credentials configured. Add one below to enable the auth
@@ -175,7 +173,11 @@ export function CredentialSettings({ onClose }: CredentialSettingsProps) {
           {error && <p className="credential-error">{error}</p>}
 
           <div className="dialog-actions">
-            <button className="btn btn-secondary" onClick={onClose} type="button">
+            <button
+              className="btn btn-secondary"
+              onClick={onClose}
+              type="button"
+            >
               Close
             </button>
             <button

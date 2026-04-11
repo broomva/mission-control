@@ -1,55 +1,57 @@
 /* ============================================================
-   Design Tokens — Liquid Glass Design System
+   Design Tokens — Omnara / Superconductor Design System
    ============================================================ */
 
 :root {
   /* --- Backgrounds --- */
-  --bg-canvas: #0a0a16;
-  --bg-base: #111122;
-  --bg-elevated: #1a1a2e;
+  --bg-app: #111116;
+  --bg-sidebar: #18181e;
+  --bg-surface: #1e1e24;
+  --bg-surface-hover: #26262e;
+  --bg-surface-active: #2a2a34;
+  --bg-input: #1a1a22;
 
-  /* --- Glass --- */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-bg-hover: rgba(255, 255, 255, 0.08);
-  --glass-bg-active: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.14);
-  --glass-blur: blur(20px) saturate(180%);
-  --glass-blur-strong: blur(40px) saturate(200%);
-  --glass-bg-prominent: rgba(0, 122, 255, 0.08);
-  --glass-border-prominent: rgba(0, 122, 255, 0.18);
-  --glass-bg-danger: rgba(255, 69, 58, 0.08);
-  --glass-border-danger: rgba(255, 69, 58, 0.18);
+  /* --- Borders --- */
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.10);
+  --border-active: rgba(255, 255, 255, 0.14);
 
   /* --- Text --- */
-  --text-primary: rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.58);
-  --text-tertiary: rgba(255, 255, 255, 0.38);
+  --text-primary: #e4e4ea;
+  --text-secondary: #8a8a96;
+  --text-tertiary: #5a5a66;
+  --text-muted: #3e3e48;
 
-  /* --- Accent --- */
-  --accent: #007aff;
-  --accent-hover: #3395ff;
-  --accent-subtle: rgba(0, 122, 255, 0.15);
+  /* --- Accent (teal green, Omnara style) --- */
+  --accent-primary: #2dd4a8;
+  --accent-hover: #3eeabc;
+  --accent-subtle: rgba(45, 212, 168, 0.12);
+  --accent-text: #2dd4a8;
 
   /* --- Semantic --- */
-  --danger: #ff453a;
-  --danger-subtle: rgba(255, 69, 58, 0.15);
-  --success: #30d158;
-  --success-subtle: rgba(48, 209, 88, 0.15);
+  --color-success: #2dd4a8;
+  --color-warning: #f0b429;
+  --color-error: #ef4444;
+  --color-info: #60a5fa;
+
+  /* --- Legacy aliases (for components not yet migrated) --- */
+  --accent: var(--accent-primary);
+  --danger: var(--color-error);
+  --danger-subtle: rgba(239, 68, 68, 0.12);
+  --success: var(--color-success);
+  --success-subtle: rgba(45, 212, 168, 0.12);
 
   /* --- Typography --- */
-  --font-sans: "SF Pro Display", "SF Pro Text", Inter, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  --font-mono: "SF Mono", Menlo, Monaco, "Cascadia Code", "Courier New",
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Fira Code',
     monospace;
   --text-xs: 11px;
   --text-sm: 12px;
-  --text-base: 14px;
-  --text-md: 15px;
+  --text-base: 13px;
+  --text-md: 14px;
   --text-lg: 16px;
-  --text-xl: 18px;
-  --text-2xl: 24px;
+  --text-xl: 20px;
 
   /* --- Spacing --- */
   --space-1: 2px;
@@ -65,42 +67,39 @@
 
   /* --- Border Radius --- */
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 
   /* --- Shadows --- */
-  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.25),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
-  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.4),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
-  --shadow-glow-accent: 0 0 20px rgba(0, 122, 255, 0.25);
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-dialog: 0 8px 32px rgba(0, 0, 0, 0.5);
 
   /* --- Transitions --- */
   --transition-fast: 120ms ease;
   --transition-normal: 200ms ease;
   --transition-slow: 350ms ease;
-  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* --- Git Status --- */
-  --git-staged: #30d158;
-  --git-modified: #ffd60a;
-  --git-untracked: rgba(255, 255, 255, 0.38);
-  --git-conflicted: #ff453a;
-  --git-deleted: #ff453a;
+  --git-addition: #2dd4a8;
+  --git-deletion: #ef4444;
+  --git-modified: #f0b429;
+  --git-staged: #2dd4a8;
+  --git-untracked: var(--text-tertiary);
+  --git-conflicted: #ef4444;
+  --git-deleted: #ef4444;
 
   /* --- Agent Status --- */
-  --agent-running: #30d158;
-  --agent-waiting: #ffd60a;
-  --agent-error: #ff453a;
-  --agent-idle: rgba(255, 255, 255, 0.38);
-  --agent-completed: var(--accent);
+  --agent-running: #2dd4a8;
+  --agent-waiting: #f0b429;
+  --agent-error: #ef4444;
+  --agent-idle: var(--text-tertiary);
+  --agent-completed: var(--accent-primary);
 
-  /* --- Terminal (reference; actual values in TSX) --- */
-  --terminal-bg: #0a0a16;
-  --terminal-cursor: #007aff;
-  --terminal-selection: rgba(0, 122, 255, 0.25);
+  /* --- Terminal --- */
+  --terminal-bg: #111116;
+  --terminal-cursor: #2dd4a8;
+  --terminal-selection: rgba(45, 212, 168, 0.20);
 
   /* --- Z-Index --- */
   --z-base: 0;

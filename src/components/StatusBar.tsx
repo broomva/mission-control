@@ -59,7 +59,7 @@ function AgentBadge({ agent }: { agent: AgentInfo }) {
       type="button"
       className="status-bar-agent"
       onClick={() => setFocusedTile(agent.id)}
-      title={`${label} — ${agent.status}`}
+      title={`${label} - ${agent.status}`}
     >
       <span
         className={`status-bar-dot ${dotClass}`}
@@ -70,9 +70,7 @@ function AgentBadge({ agent }: { agent: AgentInfo }) {
         {isActive ? ` ${formatElapsed(agent.started_at)}` : ""}
         {agent.status === "waiting" ? " waiting" : ""}
         {agent.status === "error" ? " error" : ""}
-        {agent.status === "idle" || agent.status === "stopped"
-          ? " idle"
-          : ""}
+        {agent.status === "idle" || agent.status === "stopped" ? " idle" : ""}
         {agent.status === "completed" ? " done" : ""}
       </span>
     </button>

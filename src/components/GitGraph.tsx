@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from "react";
-import type { GraphCommit, GraphEdge, CommitDetail } from "../bindings";
+import { useCallback, useEffect, useRef } from "react";
+import type { CommitDetail, GraphCommit, GraphEdge } from "../bindings";
 import { useGitGraphStore } from "../stores/gitGraphStore";
 
 const ROW_HEIGHT = 32;
@@ -29,8 +29,14 @@ export function GitGraph({
   projectPath,
   onSelectCommitOid,
 }: GitGraphProps) {
-  const { graphData, selectedCommit, loading, fetchGraph, selectCommit, clearSelection } =
-    useGitGraphStore();
+  const {
+    graphData,
+    selectedCommit,
+    loading,
+    fetchGraph,
+    selectCommit,
+    clearSelection,
+  } = useGitGraphStore();
 
   useEffect(() => {
     fetchGraph(projectId, projectPath);
@@ -75,10 +81,7 @@ export function GitGraph({
 
       {/* Commit detail sidebar */}
       {selectedCommit && (
-        <CommitDetailPanel
-          commit={selectedCommit}
-          onClose={clearSelection}
-        />
+        <CommitDetailPanel commit={selectedCommit} onClose={clearSelection} />
       )}
     </div>
   );
@@ -104,9 +107,7 @@ function CommitDetailPanel({
         </button>
       </div>
 
-      <div className="git-graph-detail-sha">
-        {commit.sha.slice(0, 12)}
-      </div>
+      <div className="git-graph-detail-sha">{commit.sha.slice(0, 12)}</div>
 
       <p className="git-graph-detail-message">{commit.message}</p>
 
@@ -132,9 +133,7 @@ function CommitDetailPanel({
                       ? "-"
                       : "~"}
                 </span>
-                <span className="git-graph-detail-file-path">
-                  {file.path}
-                </span>
+                <span className="git-graph-detail-file-path">{file.path}</span>
               </div>
             ))}
           </div>
@@ -193,7 +192,8 @@ function GraphCanvas({
       const x2 = GRAPH_PADDING + edge.to_lane * LANE_WIDTH + LANE_WIDTH / 2;
       const y2 = toRow * ROW_HEIGHT + ROW_HEIGHT / 2;
 
-      ctx.strokeStyle = LANE_COLORS[edge.from_lane % LANE_COLORS.length] ?? "#007aff";
+      ctx.strokeStyle =
+        LANE_COLORS[edge.from_lane % LANE_COLORS.length] ?? "#007aff";
       ctx.globalAlpha = 0.6;
       ctx.beginPath();
       ctx.moveTo(x1, y1);
@@ -270,10 +270,7 @@ function GraphCanvas({
           }}
         >
           {/* Graph lane area (canvas overlays this) */}
-          <div
-            className="git-graph-lane-area"
-            style={{ width: graphWidth }}
-          >
+          <div className="git-graph-lane-area" style={{ width: graphWidth }}>
             {i === 0 && (
               <canvas
                 ref={canvasRef}

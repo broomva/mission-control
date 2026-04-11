@@ -5,8 +5,8 @@ import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useAgentStore } from "../stores/agentStore";
 import { useProjectStore } from "../stores/projectStore";
 import { CenterPane } from "./CenterPane";
-import { ReviewPane } from "./ReviewPane";
-import { Sidebar } from "./Sidebar";
+import { FileExplorer } from "./FileExplorer";
+import { WorkspaceSidebar } from "./WorkspaceSidebar";
 
 export function AppShell() {
   const { fetchProjects } = useProjectStore();
@@ -36,33 +36,31 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
-      <div className="toolbar">
-        <span className="toolbar-title">Mission Control</span>
-        <div className="toolbar-actions">
+      <header className="app-header">
+        <span className="app-header-title">Mission Control</span>
+        <div className="app-header-actions">
           <button
-            className="btn-toolbar"
+            className="app-header-settings"
             onClick={() => setShowCredentialSettings(true)}
-            title="Credential Settings"
+            title="Settings"
             type="button"
           >
             &#9881;
           </button>
         </div>
-      </div>
+      </header>
       <div className="app-body">
-        <Sidebar />
+        <WorkspaceSidebar />
         <CenterPane
           showSpawnDialog={showSpawnDialog}
           onOpenSpawnDialog={handleSpawnAgent}
           onCloseSpawnDialog={() => setShowSpawnDialog(false)}
         />
-        <ReviewPane />
+        <FileExplorer />
       </div>
       <StatusBar />
       {showCredentialSettings && (
-        <CredentialSettings
-          onClose={() => setShowCredentialSettings(false)}
-        />
+        <CredentialSettings onClose={() => setShowCredentialSettings(false)} />
       )}
     </div>
   );
