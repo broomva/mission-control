@@ -6,8 +6,8 @@ tags:
   - moc
 type: moc
 status: active
-created: 2026-03-21
-updated: 2026-03-21
+created: 2026-04-11
+updated: 2026-04-11
 related:
   - "[[Documentation Hub]]"
   - "[[CLAUDE]]"
@@ -22,32 +22,13 @@ related:
 > tool usage, files modified, and commits — linking agent work to the
 > knowledge graph.
 
-**Total sessions indexed**: 9
-
-## 2026-03-04
-
-| Session | Branch | Turns | Duration | Topic |
-|---------|--------|-------|----------|-------|
-| [[session-2026-03-04-40654edb]] | `main` | 4 | 3h 9m | how to run this on web and as ios app |
-| [[session-2026-03-04-ffdbef35]] | `main` | 2 | 1m | please /find-skills for apple liquid glass design |
-| [[session-2026-03-04-180a708a]] | `main` | 2 | 42m | please help me refacoring this project          de |
-| [[session-2026-03-04-a6bfae42]] | `main` | 5 | 2h 25m | Implement the following plan:   Liquid Glass Desig |
-| [[session-2026-03-04-e5cb6506]] | `main` | 2 | 34m | Implement the following plan:   Three-Column Layou |
-| [[session-2026-03-04-1f2eae94]] | `main` | 5 | 11h 33m | Implement the following plan:   M2: Git-Aware — Fi |
-| [[session-2026-03-04-c5585ee4]] | `main` | 5 | 1h 51m | Implement the following plan:   M3: Agent-native — |
-| [[session-2026-03-04-a5d27ad9]] | `main` | 1 | 13m | Implement the following plan:   M3.1: Replace NDJS |
-
-## 
-
-| Session | Branch | Turns | Duration | Topic |
-|---------|--------|-------|----------|-------|
-| [[session--bffa010c]] | `` | 0 |  | Session bffa010c |
+**Total sessions indexed**: 0
 
 ## Statistics
 
-- **Total turns**: 26
-- **Branches worked on**: 1
-- **Date range**:  → 2026-03-04
+- **Total turns**: 0
+- **Branches worked on**: 0
+- **Date range**: — → —
 
 ---
 

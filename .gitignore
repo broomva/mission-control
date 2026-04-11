@@ -27,3 +27,4 @@ src-tauri/icons/
 
 # Mission Control local state
 .mission-control/
+.claude/worktrees/

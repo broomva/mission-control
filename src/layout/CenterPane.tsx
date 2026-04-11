@@ -1,16 +1,23 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { SpawnAgentDialog } from "../components/SpawnAgentDialog";
 import { TileGrid } from "../components/TileGrid";
 import { ProjectDashboard } from "../panels/ProjectDashboard";
 import { useAgentStore } from "../stores/agentStore";
 import { useProjectStore } from "../stores/projectStore";
-import { useTileLayoutStore } from "../stores/tileLayoutStore";
 
-export function CenterPane() {
+interface CenterPaneProps {
+  showSpawnDialog: boolean;
+  onOpenSpawnDialog: () => void;
+  onCloseSpawnDialog: () => void;
+}
+
+export function CenterPane({
+  showSpawnDialog,
+  onOpenSpawnDialog,
+  onCloseSpawnDialog,
+}: CenterPaneProps) {
   const { activeProjectId } = useProjectStore();
   const { agents, fetchAgents, setupEventListeners } = useAgentStore();
-  const { maximizedTileId, restoreGrid } = useTileLayoutStore();
-  const [showSpawnDialog, setShowSpawnDialog] = useState(false);
 
   // Fetch agents when the active project changes
   useEffect(() => {
@@ -32,28 +39,6 @@ export function CenterPane() {
     };
   }, [setupEventListeners]);
 
-  // Escape key exits maximized view
-  useEffect(() => {
-    if (!maximizedTileId) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        restoreGrid();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [maximizedTileId, restoreGrid]);
-
-  const handleSpawnAgent = useCallback(() => {
-    setShowSpawnDialog(true);
-  }, []);
-
-  const handleCloseDialog = useCallback(() => {
-    setShowSpawnDialog(false);
-  }, []);
-
   // Filter agents by active project
   const projectAgents = activeProjectId
     ? agents.filter((a) => a.project_id === activeProjectId)
@@ -62,12 +47,12 @@ export function CenterPane() {
   return (
     <div className="center-pane">
       {activeProjectId ? (
-        <TileGrid agents={projectAgents} onSpawnAgent={handleSpawnAgent} />
+        <TileGrid agents={projectAgents} onSpawnAgent={onOpenSpawnDialog} />
       ) : (
         <ProjectDashboard />
       )}
 
-      {showSpawnDialog && <SpawnAgentDialog onClose={handleCloseDialog} />}
+      {showSpawnDialog && <SpawnAgentDialog onClose={onCloseSpawnDialog} />}
     </div>
   );
 }
