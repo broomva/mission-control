@@ -1,28 +1,25 @@
-import type { IDockviewPanelProps } from "dockview-react";
 import { useEffect, useState } from "react";
 import type { DiffInfo } from "../bindings";
 import { commands } from "../bindings";
 
-interface DiffViewerPanelParams {
+interface DiffViewerPanelProps {
   projectId: string;
   projectPath: string;
   commitOid: string;
 }
 
 export function DiffViewerPanel({
-  params,
-}: IDockviewPanelProps<DiffViewerPanelParams>) {
+  projectId,
+  projectPath,
+  commitOid,
+}: DiffViewerPanelProps) {
   const [diff, setDiff] = useState<DiffInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function load() {
-      const result = await commands.gitDiff(
-        params.projectId,
-        params.projectPath,
-        params.commitOid,
-      );
+      const result = await commands.gitDiff(projectId, projectPath, commitOid);
       if (result.status === "ok") {
         setDiff(result.data);
         // Expand all files by default
@@ -33,7 +30,7 @@ export function DiffViewerPanel({
       }
     }
     load();
-  }, [params.projectId, params.projectPath, params.commitOid]);
+  }, [projectId, projectPath, commitOid]);
 
   const toggleFile = (path: string) => {
     setExpandedFiles((prev) => {
@@ -70,7 +67,7 @@ export function DiffViewerPanel({
   return (
     <div className="diff-viewer">
       <div className="diff-header">
-        <span className="diff-header-oid">{params.commitOid.slice(0, 7)}</span>
+        <span className="diff-header-oid">{commitOid.slice(0, 7)}</span>
         <div className="diff-stats">
           <span className="diff-stats-files">
             {diff.stats.files_changed} file
@@ -90,7 +87,7 @@ export function DiffViewerPanel({
               onClick={() => toggleFile(file.path)}
             >
               <span className="diff-file-toggle">
-                {expandedFiles.has(file.path) ? "▾" : "▸"}
+                {expandedFiles.has(file.path) ? "\u25BE" : "\u25B8"}
               </span>
               <span
                 className={`diff-file-status diff-file-status-${file.status}`}
@@ -99,7 +96,9 @@ export function DiffViewerPanel({
               </span>
               <span className="diff-file-path">{file.path}</span>
               {file.old_path && (
-                <span className="diff-file-old-path">← {file.old_path}</span>
+                <span className="diff-file-old-path">
+                  &larr; {file.old_path}
+                </span>
               )}
             </button>
 

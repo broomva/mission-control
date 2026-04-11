@@ -1,5 +1,5 @@
 /* ============================================================
-   Layout — App shell, toolbar, dockview overrides, dashboard
+   Layout — App shell, toolbar, three-pane layout, dashboard
    ============================================================ */
 
 /* --- App Shell --- */
@@ -47,9 +47,9 @@
   min-height: 0;
 }
 
-/* --- Sidebar --- */
+/* --- Sidebar (Left Pane) --- */
 .sidebar {
-  width: 200px;
+  width: 220px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -57,6 +57,7 @@
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-right: 1px solid var(--glass-border);
+  overflow: hidden;
 }
 
 .sidebar-header {
@@ -65,6 +66,7 @@
   justify-content: space-between;
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
 }
 
 .sidebar-label {
@@ -82,9 +84,9 @@
 }
 
 .sidebar-nav {
-  flex: 1;
   overflow-y: auto;
   padding: var(--space-2) 0;
+  flex-shrink: 0;
 }
 
 .sidebar-item {
@@ -138,9 +140,64 @@
   text-align: center;
 }
 
+/* --- Sidebar Detail Section (Files/Git/Agents tabs) --- */
+.sidebar-detail {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border-top: 1px solid var(--glass-border);
+}
+
+.sidebar-detail-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.sidebar-detail-tab {
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.sidebar-detail-tab:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-secondary);
+}
+
+.sidebar-detail-tab-active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-color: var(--accent-subtle);
+}
+
+.sidebar-detail-tab-active:hover {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.sidebar-detail-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .sidebar-footer {
   border-top: 1px solid var(--glass-border);
   padding: var(--space-2);
+  flex-shrink: 0;
 }
 
 .sidebar-footer-btn {
@@ -148,53 +205,54 @@
   text-align: center;
 }
 
-/* --- Dockview Container --- */
-.dockview-container {
+/* --- Center Pane --- */
+.center-pane {
   flex: 1;
-  min-height: 0;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
-/* --- Dockview Theme Overrides --- */
-.dockview-theme-abyss {
-  --dv-background-color: var(--bg-base);
-  --dv-paneview-header-border-color: var(--glass-border);
-  --dv-tabs-and-actions-container-background-color: var(--glass-bg);
-  --dv-activegroup-visiblepanel-tab-background-color: transparent;
-  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
-  --dv-inactivegroup-visiblepanel-tab-background-color: transparent;
-  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
-  --dv-tab-divider-color: transparent;
-  --dv-activegroup-visiblepanel-tab-color: var(--text-primary);
-  --dv-activegroup-hiddenpanel-tab-color: var(--text-tertiary);
-  --dv-inactivegroup-visiblepanel-tab-color: var(--text-secondary);
-  --dv-inactivegroup-hiddenpanel-tab-color: var(--text-tertiary);
-  --dv-separator-border: var(--glass-border);
-  --dv-drag-over-background-color: var(--accent-subtle);
-  --dv-drag-over-border-color: var(--accent);
-}
-
-/* Glass tab bar */
-.dockview-theme-abyss .tabs-container {
+/* --- Review Pane (Right Pane) --- */
+.review-pane {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  border-left: 1px solid var(--glass-border);
+}
+
+.review-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
 }
 
-/* Active tab indicator */
-.dockview-theme-abyss .tab.active-tab {
-  position: relative;
+.review-pane-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
 
-.dockview-theme-abyss .tab.active-tab::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 2px 2px 0 0;
+.review-pane-collapse-btn {
+  font-size: var(--text-base) !important;
+  padding: var(--space-1) var(--space-2) !important;
+  line-height: 1;
+}
+
+.review-pane-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
 }
 
 /* --- Dashboard --- */
@@ -221,76 +279,3 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-5);
 }
-
-/* --- Context Panel (right sidebar) --- */
-.context-panel {
-  width: 280px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-left: 1px solid var(--glass-border);
-}
-
-.context-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--glass-border);
-  flex-shrink: 0;
-}
-
-.context-panel-tabs {
-  display: flex;
-  gap: var(--space-1);
-}
-
-.context-panel-tab {
-  padding: var(--space-1) var(--space-3);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  font-family: inherit;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.context-panel-tab:hover {
-  background: var(--glass-bg-hover);
-  color: var(--text-secondary);
-}
-
-.context-panel-tab-active {
-  background: var(--accent-subtle);
-  color: var(--accent);
-  border-color: var(--accent-subtle);
-}
-
-.context-panel-tab-active:hover {
-  background: var(--accent-subtle);
-  color: var(--accent);
-}
-
-.context-panel-project-name {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 120px;
-}
-
-.context-panel-body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-

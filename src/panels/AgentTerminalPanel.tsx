@@ -2,13 +2,8 @@ import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import type { IDockviewPanelProps } from "dockview-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type AgentEvent, commands, events } from "../bindings";
-
-interface AgentTerminalPanelParams {
-  agentId: string;
-}
 
 const EVENT_ICONS: Record<string, string> = {
   tool_use: "T",
@@ -35,17 +30,13 @@ function formatTime(iso: string): string {
   }
 }
 
-export function AgentTerminalPanel({
-  params,
-}: IDockviewPanelProps<AgentTerminalPanelParams>) {
+export function AgentTerminalPanel({ agentId }: { agentId: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const [timelineEvents, setTimelineEvents] = useState<AgentEvent[]>([]);
   const [autoScroll, setAutoScroll] = useState(true);
-
-  const agentId = params.agentId;
 
   const handleResize = useCallback(() => {
     const fitAddon = fitAddonRef.current;

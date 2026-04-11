@@ -1,26 +1,20 @@
-import type { IDockviewPanelProps } from "dockview-react";
 import { useEffect, useState } from "react";
 import { AddProjectDialog } from "../components/AddProjectDialog";
 import { ProjectCard } from "../components/ProjectCard";
-import { useLayoutStore } from "../stores/layoutStore";
 import { useProjectStore } from "../stores/projectStore";
 import { useTerminalStore } from "../stores/terminalStore";
 
-export function ProjectDashboard(_props: IDockviewPanelProps) {
+export function ProjectDashboard() {
   const { projects, fetchProjects } = useProjectStore();
   const { createTerminal } = useTerminalStore();
-  const { addTerminalPanel } = useLayoutStore();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
 
-  const handleOpenTerminal = async (projectId: string, cwd: string) => {
-    const info = await createTerminal(projectId, cwd);
-    if (info) {
-      addTerminalPanel(info.id, `Terminal - ${info.project_id.slice(0, 8)}`);
-    }
+  const handleOpenTerminal = async (_projectId: string, cwd: string) => {
+    await createTerminal(_projectId, cwd);
   };
 
   return (

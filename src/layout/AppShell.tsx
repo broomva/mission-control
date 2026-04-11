@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useProjectStore } from "../stores/projectStore";
-import { ContextPanel } from "./ContextPanel";
-import { DockviewWrapper } from "./DockviewWrapper";
+import { CenterPane } from "./CenterPane";
+import { ReviewPane } from "./ReviewPane";
 import { Sidebar } from "./Sidebar";
 
 export function AppShell() {
@@ -18,10 +18,8 @@ export function AppShell() {
       </div>
       <div className="app-body">
         <Sidebar />
-        <div className="dockview-container">
-          <DockviewWrapper />
-        </div>
-        <ContextPanel />
+        <CenterPane />
+        <ReviewPane />
       </div>
     </div>
   );

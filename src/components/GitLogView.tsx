@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useGitStore } from "../stores/gitStore";
-import { useLayoutStore } from "../stores/layoutStore";
 
 interface GitLogViewProps {
   projectId: string;
@@ -21,7 +20,6 @@ function formatRelativeTime(timestamp: number): string {
 
 export function GitLogView({ projectId, projectPath }: GitLogViewProps) {
   const { commits, branches, loading, fetchLog, fetchBranches } = useGitStore();
-  const { openDiffViewer } = useLayoutStore();
 
   useEffect(() => {
     fetchLog(projectId, projectPath);
@@ -47,19 +45,7 @@ export function GitLogView({ projectId, projectPath }: GitLogViewProps) {
       </div>
       <div className="git-log-list">
         {commits.map((commit) => (
-          <button
-            type="button"
-            key={commit.oid}
-            className="commit-row"
-            onClick={() =>
-              openDiffViewer(
-                projectId,
-                projectPath,
-                commit.oid,
-                commit.message.split("\n")[0] ?? "",
-              )
-            }
-          >
+          <div key={commit.oid} className="commit-row">
             <div className="commit-row-top">
               <span className="commit-oid">{commit.short_oid}</span>
               {commit.branch_refs.map((ref_name) => (
@@ -75,7 +61,7 @@ export function GitLogView({ projectId, projectPath }: GitLogViewProps) {
               <span>{commit.author}</span>
               <span>{formatRelativeTime(commit.timestamp)}</span>
             </div>
-          </button>
+          </div>
         ))}
         {commits.length > 0 && (
           <button

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAgentStore } from "../stores/agentStore";
-import { useLayoutStore } from "../stores/layoutStore";
 import { useProjectStore } from "../stores/projectStore";
 
 interface SpawnAgentDialogProps {
@@ -18,7 +17,6 @@ export function SpawnAgentDialog({ onClose }: SpawnAgentDialogProps) {
   const [agentType, setAgentType] = useState("claude-code");
   const [prompt, setPrompt] = useState("");
   const { spawnAgent } = useAgentStore();
-  const { openAgentPanel } = useLayoutStore();
   const { activeProjectId, projects } = useProjectStore();
 
   const project = activeProjectId
@@ -34,10 +32,6 @@ export function SpawnAgentDialog({ onClose }: SpawnAgentDialogProps) {
       project.path,
     );
     if (agent) {
-      openAgentPanel(
-        agent.id,
-        `${AGENT_TYPES.find((t) => t.value === agentType)?.label ?? "Agent"} — ${project.name}`,
-      );
       onClose();
     }
   };

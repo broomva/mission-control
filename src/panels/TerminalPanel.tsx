@@ -2,24 +2,21 @@ import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import type { IDockviewPanelProps } from "dockview-react";
 import { useCallback, useEffect, useRef } from "react";
 import { commands, events } from "../bindings";
 
-interface TerminalPanelParams {
+interface TerminalPanelProps {
   terminalId: string;
   restoredSession?: boolean;
 }
 
 export function TerminalPanel({
-  params,
-}: IDockviewPanelProps<TerminalPanelParams>) {
+  terminalId,
+  restoredSession = false,
+}: TerminalPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-
-  const terminalId = params.terminalId;
-  const restoredSession = params.restoredSession ?? false;
 
   const handleResize = useCallback(() => {
     const fitAddon = fitAddonRef.current;

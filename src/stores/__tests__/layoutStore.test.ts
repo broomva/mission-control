@@ -4,10 +4,6 @@ vi.mock("../../bindings", () => ({
   commands: {
     saveWorkspaceState: vi.fn(),
     loadWorkspaceState: vi.fn(),
-    createTerminal: vi.fn(),
-    listProjectTerminals: vi.fn(),
-    getTerminalScrollback: vi.fn(),
-    restoreTerminal: vi.fn(),
   },
 }));
 
@@ -16,45 +12,67 @@ import { useLayoutStore } from "../layoutStore";
 
 const mockedCommands = vi.mocked(commands);
 
-function makeMockApi(overrides: Record<string, unknown> = {}) {
-  return { toJSON: vi.fn(), panels: [], addPanel: vi.fn(), ...overrides };
-}
-
 describe("layoutStore", () => {
   beforeEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useLayoutStore.setState({
-      dockviewApi: null as any,
-      contextPanelTab: "files",
+      sidebarTab: "files",
+      leftPaneVisible: true,
+      rightPaneVisible: true,
     });
     vi.clearAllMocks();
   });
 
-  describe("setDockviewApi", () => {
-    it("stores the dockview api reference", () => {
-      const mockApi = makeMockApi();
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      useLayoutStore.getState().setDockviewApi(mockApi as any);
-
-      expect(useLayoutStore.getState().dockviewApi).toBe(mockApi);
-    });
-  });
-
-  describe("contextPanelTab", () => {
+  describe("sidebarTab", () => {
     it("defaults to files", () => {
-      expect(useLayoutStore.getState().contextPanelTab).toBe("files");
+      expect(useLayoutStore.getState().sidebarTab).toBe("files");
     });
 
     it("can be set to git", () => {
-      useLayoutStore.getState().setContextPanelTab("git");
-      expect(useLayoutStore.getState().contextPanelTab).toBe("git");
+      useLayoutStore.getState().setSidebarTab("git");
+      expect(useLayoutStore.getState().sidebarTab).toBe("git");
+    });
+
+    it("can be set to agents", () => {
+      useLayoutStore.getState().setSidebarTab("agents");
+      expect(useLayoutStore.getState().sidebarTab).toBe("agents");
     });
 
     it("can be set back to files", () => {
-      useLayoutStore.getState().setContextPanelTab("git");
-      useLayoutStore.getState().setContextPanelTab("files");
-      expect(useLayoutStore.getState().contextPanelTab).toBe("files");
+      useLayoutStore.getState().setSidebarTab("git");
+      useLayoutStore.getState().setSidebarTab("files");
+      expect(useLayoutStore.getState().sidebarTab).toBe("files");
+    });
+  });
+
+  describe("pane visibility", () => {
+    it("left pane defaults to visible", () => {
+      expect(useLayoutStore.getState().leftPaneVisible).toBe(true);
+    });
+
+    it("right pane defaults to visible", () => {
+      expect(useLayoutStore.getState().rightPaneVisible).toBe(true);
+    });
+
+    it("toggleLeftPane hides the left pane", () => {
+      useLayoutStore.getState().toggleLeftPane();
+      expect(useLayoutStore.getState().leftPaneVisible).toBe(false);
+    });
+
+    it("toggleLeftPane toggles back to visible", () => {
+      useLayoutStore.getState().toggleLeftPane();
+      useLayoutStore.getState().toggleLeftPane();
+      expect(useLayoutStore.getState().leftPaneVisible).toBe(true);
+    });
+
+    it("toggleRightPane hides the right pane", () => {
+      useLayoutStore.getState().toggleRightPane();
+      expect(useLayoutStore.getState().rightPaneVisible).toBe(false);
+    });
+
+    it("toggleRightPane toggles back to visible", () => {
+      useLayoutStore.getState().toggleRightPane();
+      useLayoutStore.getState().toggleRightPane();
+      expect(useLayoutStore.getState().rightPaneVisible).toBe(true);
     });
   });
 
@@ -63,14 +81,17 @@ describe("layoutStore", () => {
       mockedCommands.loadWorkspaceState.mockResolvedValue({
         status: "ok",
         data: {
-          layout: '{"grid":{}}',
+          layout:
+            '{"leftPaneVisible":true,"rightPaneVisible":true,"sidebarTab":"files"}',
           active_project_id: null,
         },
       });
 
       const result = await useLayoutStore.getState().loadLayout();
 
-      expect(result).toBe('{"grid":{}}');
+      expect(result).toBe(
+        '{"leftPaneVisible":true,"rightPaneVisible":true,"sidebarTab":"files"}',
+      );
     });
 
     it("returns null when no layout saved", async () => {
@@ -96,167 +117,6 @@ describe("layoutStore", () => {
       const result = await useLayoutStore.getState().loadLayout();
 
       expect(result).toBeNull();
-    });
-  });
-
-  describe("addTerminalPanel", () => {
-    it("does nothing without dockview api", () => {
-      useLayoutStore.getState().addTerminalPanel("term-1", "Terminal 1");
-    });
-
-    it("calls addPanel on dockview api", () => {
-      const mockApi = makeMockApi();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      useLayoutStore.setState({ dockviewApi: mockApi as any });
-
-      useLayoutStore.getState().addTerminalPanel("term-1", "Terminal 1");
-
-      expect(mockApi.addPanel).toHaveBeenCalledWith({
-        id: "terminal-term-1",
-        component: "terminal",
-        title: "Terminal 1",
-        params: { terminalId: "term-1" },
-      });
-    });
-
-    it("passes extra params for restored sessions", () => {
-      const mockApi = makeMockApi();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      useLayoutStore.setState({ dockviewApi: mockApi as any });
-
-      useLayoutStore.getState().addTerminalPanel("term-1", "Terminal 1", {
-        restoredSession: true,
-      });
-
-      expect(mockApi.addPanel).toHaveBeenCalledWith({
-        id: "terminal-term-1",
-        component: "terminal",
-        title: "Terminal 1",
-        params: { terminalId: "term-1", restoredSession: true },
-      });
-    });
-  });
-
-  describe("addDashboardPanel", () => {
-    it("does nothing without dockview api", () => {
-      useLayoutStore.getState().addDashboardPanel();
-    });
-
-    it("activates existing dashboard instead of creating duplicate", () => {
-      const setActive = vi.fn();
-      const mockApi = makeMockApi({
-        panels: [{ id: "project-dashboard", api: { setActive } }],
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      useLayoutStore.setState({ dockviewApi: mockApi as any });
-
-      useLayoutStore.getState().addDashboardPanel();
-
-      expect(setActive).toHaveBeenCalled();
-      expect(mockApi.addPanel).not.toHaveBeenCalled();
-    });
-
-    it("creates dashboard panel when none exists", () => {
-      const mockApi = makeMockApi();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      useLayoutStore.setState({ dockviewApi: mockApi as any });
-
-      useLayoutStore.getState().addDashboardPanel();
-
-      expect(mockApi.addPanel).toHaveBeenCalledWith({
-        id: "project-dashboard",
-        component: "dashboard",
-        title: "Projects",
-      });
-    });
-  });
-
-  describe("openProjectWorkspace", () => {
-    it("does nothing without dockview api", async () => {
-      await useLayoutStore
-        .getState()
-        .openProjectWorkspace("p1", "TestProject", "/tmp/test");
-      expect(mockedCommands.listProjectTerminals).not.toHaveBeenCalled();
-    });
-
-    it("creates fresh terminal when no persisted sessions exist", async () => {
-      const mockApi = makeMockApi();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      useLayoutStore.setState({ dockviewApi: mockApi as any });
-
-      mockedCommands.listProjectTerminals.mockResolvedValue({
-        status: "ok",
-        data: [],
-      });
-      mockedCommands.createTerminal.mockResolvedValue({
-        status: "ok",
-        data: {
-          id: "new-term",
-          project_id: "p1",
-          title: "Terminal",
-          cols: 80,
-          rows: 24,
-          cwd: "/tmp/test",
-          created_at: "2024-01-01T00:00:00Z",
-          status: "running",
-          scrollback_path: null,
-        },
-      });
-
-      await useLayoutStore
-        .getState()
-        .openProjectWorkspace("p1", "TestProject", "/tmp/test");
-
-      expect(mockedCommands.createTerminal).toHaveBeenCalledWith(
-        "p1",
-        "/tmp/test",
-        80,
-        24,
-      );
-      expect(mockApi.addPanel).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: "terminal-new-term",
-          component: "terminal",
-          title: "TestProject - Terminal",
-        }),
-      );
-    });
-
-    it("restores exited sessions from persisted data", async () => {
-      const mockApi = makeMockApi();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      useLayoutStore.setState({ dockviewApi: mockApi as any });
-
-      mockedCommands.listProjectTerminals.mockResolvedValue({
-        status: "ok",
-        data: [
-          {
-            id: "old-term",
-            project_id: "p1",
-            title: "Terminal",
-            cols: 80,
-            rows: 24,
-            cwd: "/tmp/test",
-            created_at: "2024-01-01T00:00:00Z",
-            status: "exited",
-            scrollback_path: "/some/path",
-          },
-        ],
-      });
-
-      await useLayoutStore
-        .getState()
-        .openProjectWorkspace("p1", "TestProject", "/tmp/test");
-
-      // Should not create a new terminal
-      expect(mockedCommands.createTerminal).not.toHaveBeenCalled();
-      // Should add panel with restoredSession flag
-      expect(mockApi.addPanel).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: "terminal-old-term",
-          params: expect.objectContaining({ restoredSession: true }),
-        }),
-      );
     });
   });
 });

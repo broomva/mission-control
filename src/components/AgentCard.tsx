@@ -1,6 +1,5 @@
 import type { AgentInfo } from "../bindings";
 import { useAgentStore } from "../stores/agentStore";
-import { useLayoutStore } from "../stores/layoutStore";
 
 interface AgentCardProps {
   agent: AgentInfo;
@@ -41,7 +40,6 @@ function relativeTime(iso: string): string {
 
 export function AgentCard({ agent }: AgentCardProps) {
   const { stopAgent } = useAgentStore();
-  const { openAgentPanel } = useLayoutStore();
 
   const isRunning = agent.status === "running" || agent.status === "starting";
   const statusColor = STATUS_COLORS[agent.status] ?? "var(--agent-idle)";
@@ -93,18 +91,6 @@ export function AgentCard({ agent }: AgentCardProps) {
               Stop
             </button>
           )}
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() =>
-              openAgentPanel(
-                agent.id,
-                `${AGENT_TYPE_LABELS[agent.agent_type] ?? "Agent"} — ${agent.id.slice(0, 8)}`,
-              )
-            }
-          >
-            View
-          </button>
         </div>
       </div>
     </div>

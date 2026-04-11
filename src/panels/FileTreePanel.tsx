@@ -1,12 +1,9 @@
-import type { IDockviewPanelProps } from "dockview-react";
 import { FileTreeView } from "../components/FileTreeView";
 
-interface FileTreePanelParams {
+interface FileTreePanelProps {
   rootPath: string;
 }
 
-export function FileTreePanel({
-  params,
-}: IDockviewPanelProps<FileTreePanelParams>) {
-  return <FileTreeView rootPath={params.rootPath} />;
+export function FileTreePanel({ rootPath }: FileTreePanelProps) {
+  return <FileTreeView rootPath={rootPath} />;
 }
