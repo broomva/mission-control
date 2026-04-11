@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { StatusBar } from "../components/StatusBar";
 import { useProjectStore } from "../stores/projectStore";
 import { CenterPane } from "./CenterPane";
 import { ReviewPane } from "./ReviewPane";
@@ -21,6 +22,7 @@ export function AppShell() {
         <CenterPane />
         <ReviewPane />
       </div>
+      <StatusBar />
     </div>
   );
 }
