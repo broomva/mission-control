@@ -3,6 +3,7 @@ import type { AgentInfo } from "../bindings";
 import { useAgentStore } from "../stores/agentStore";
 import { useTileLayoutStore } from "../stores/tileLayoutStore";
 import { AgentTile } from "./AgentTile";
+import { SplitContainer } from "./SplitContainer";
 
 interface TileGridProps {
   agents: AgentInfo[];
@@ -24,8 +25,12 @@ function gridStyle(tileCount: number): React.CSSProperties {
 }
 
 export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
-  const { maximizedTileId, minimizedTileIds, focusedTileId } =
-    useTileLayoutStore();
+  const {
+    maximizedTileId,
+    minimizedTileIds,
+    focusedTileId,
+    splitLayout,
+  } = useTileLayoutStore();
   const { maximizeTile, restoreGrid, setFocusedTile } = useTileLayoutStore();
   const { stopAgent } = useAgentStore();
 
@@ -78,6 +83,9 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
     );
   }
 
+  // Use SplitContainer when a split layout exists
+  const useSplitLayout = splitLayout !== null;
+
   return (
     <div className="tile-grid-wrapper">
       {/* Tab bar for split view — shows all agents + add button */}
@@ -110,20 +118,35 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
         </button>
       </div>
 
-      {/* Tile grid */}
-      <div className="tile-grid" style={gridStyle(visibleAgents.length)}>
-        {visibleAgents.map((agent) => (
-          <div key={agent.id} className="tile-grid-cell">
-            <AgentTile
-              agent={agent}
-              onClose={(id) => stopAgent(id)}
-              onMaximize={(id) => maximizeTile(id)}
-            />
-          </div>
-        ))}
-      </div>
+      {/* Draggable split layout */}
+      {useSplitLayout && (
+        <SplitContainer
+          layout={splitLayout}
+          agents={visibleAgents}
+          onClose={(id) => {
+            useTileLayoutStore.getState().removeFromSplit(id);
+            stopAgent(id);
+          }}
+          onMaximize={(id) => maximizeTile(id)}
+        />
+      )}
 
-      {visibleAgents.length === 0 && (
+      {/* Fallback: CSS Grid layout */}
+      {!useSplitLayout && visibleAgents.length > 0 && (
+        <div className="tile-grid" style={gridStyle(visibleAgents.length)}>
+          {visibleAgents.map((agent) => (
+            <div key={agent.id} className="tile-grid-cell">
+              <AgentTile
+                agent={agent}
+                onClose={(id) => stopAgent(id)}
+                onMaximize={(id) => maximizeTile(id)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!useSplitLayout && visibleAgents.length === 0 && (
         <div className="tile-grid-empty">
           <p>No agents in split view.</p>
           <button type="button" className="btn btn-primary" onClick={onSpawnAgent}>

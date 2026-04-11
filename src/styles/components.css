@@ -2513,3 +2513,52 @@
   color: var(--text-tertiary);
   font-size: var(--text-sm);
 }
+
+/* ============================================================
+   Split Container — Draggable tile arrangement (binary split tree)
+   ============================================================ */
+
+.split-container {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.split-horizontal {
+  flex-direction: row;
+}
+
+.split-vertical {
+  flex-direction: column;
+}
+
+.split-pane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.split-divider-h {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  flex-shrink: 0;
+  transition: background 150ms ease;
+}
+
+.split-divider-v {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  flex-shrink: 0;
+  transition: background 150ms ease;
+}
+
+.split-divider-h:hover,
+.split-divider-v:hover,
+.split-divider-active {
+  background: var(--accent-primary);
+  opacity: 0.4;
+}
