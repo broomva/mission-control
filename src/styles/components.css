@@ -2660,3 +2660,65 @@
 .tile-tab-context-menu button:last-child:hover {
   background: rgba(239, 68, 68, 0.1);
 }
+
+/* ============================================================
+   Tile Drop Zones — Drag-and-drop tab rearrangement
+   ============================================================ */
+
+.tile-drop-zones {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.tile-drop-zone {
+  position: absolute;
+  pointer-events: all;
+  transition: background 120ms ease, border-color 120ms ease;
+  border-radius: 4px;
+  border: 2px solid transparent;
+}
+
+.tile-drop-top {
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 30%;
+}
+
+.tile-drop-bottom {
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 30%;
+}
+
+.tile-drop-left {
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 30%;
+}
+
+.tile-drop-right {
+  right: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 30%;
+}
+
+.tile-drop-zone.drag-over {
+  background: rgba(45, 212, 168, 0.15);
+  border-color: var(--accent-primary);
+  border-style: dashed;
+}
+
+/* Dragging tab visual feedback */
+.tile-grid-tab[draggable="true"] {
+  cursor: grab;
+}
+
+.tile-grid-tab[draggable="true"]:active {
+  cursor: grabbing;
+}

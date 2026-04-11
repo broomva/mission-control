@@ -81,6 +81,21 @@ function removeLeaf(node: LayoutNode, agentId: string): LayoutNode | null {
   return node;
 }
 
+/** Replace a leaf node by agentId with a new node */
+function replaceLeaf(
+  node: LayoutNode,
+  agentId: string,
+  replacement: LayoutNode,
+): LayoutNode {
+  if (node.type === "leaf") {
+    return node.agentId === agentId ? replacement : node;
+  }
+  const newFirst = replaceLeaf(node.first, agentId, replacement);
+  const newSecond = replaceLeaf(node.second, agentId, replacement);
+  if (newFirst === node.first && newSecond === node.second) return node;
+  return { ...node, first: newFirst, second: newSecond };
+}
+
 /** Collect all agent IDs from the tree */
 export function collectAgentIds(node: LayoutNode): string[] {
   if (node.type === "leaf") return [node.agentId];
@@ -89,11 +104,14 @@ export function collectAgentIds(node: LayoutNode): string[] {
 
 // --- Store ---
 
+export type DropPosition = "left" | "right" | "top" | "bottom";
+
 interface TileLayoutState {
   maximizedTileId: string | null;
   minimizedTileIds: string[];
   focusedTileId: string | null;
   splitLayout: LayoutNode | null;
+  draggedAgentId: string | null;
 
   maximizeTile: (id: string) => void;
   restoreGrid: () => void;
@@ -105,6 +123,8 @@ interface TileLayoutState {
   addToSplit: (agentId: string) => void;
   removeFromSplit: (agentId: string) => void;
   toggleSplitDirection: (path: number[]) => void;
+  setDraggedAgent: (id: string | null) => void;
+  moveToSplit: (agentId: string, targetAgentId: string, position: DropPosition) => void;
 }
 
 export const useTileLayoutStore = create<TileLayoutState>((set) => ({
@@ -112,6 +132,7 @@ export const useTileLayoutStore = create<TileLayoutState>((set) => ({
   minimizedTileIds: [],
   focusedTileId: null,
   splitLayout: null,
+  draggedAgentId: null,
 
   maximizeTile: (id: string) => {
     set({ maximizedTileId: id, focusedTileId: id });
@@ -233,6 +254,44 @@ export const useTileLayoutStore = create<TileLayoutState>((set) => ({
       if (!state.splitLayout) return state;
       const result = removeLeaf(state.splitLayout, agentId);
       return { splitLayout: result };
+    });
+  },
+
+  setDraggedAgent: (id: string | null) => {
+    set({ draggedAgentId: id });
+  },
+
+  moveToSplit: (agentId: string, targetAgentId: string, position: DropPosition) => {
+    set((state) => {
+      if (!state.splitLayout) return state;
+      if (agentId === targetAgentId) return state;
+
+      // 1. Remove the dragged agent from its current position
+      let tree = removeLeaf(state.splitLayout, agentId);
+      if (!tree) {
+        // The dragged agent was the only node — shouldn't happen if we
+        // have a target, but handle gracefully
+        tree = { type: "leaf", agentId: targetAgentId };
+      }
+
+      // 2. Build the new split containing the dragged agent and the target
+      const direction: SplitDirection =
+        position === "left" || position === "right" ? "horizontal" : "vertical";
+      const movedLeaf: LeafNode = { type: "leaf", agentId };
+      const isFirst = position === "left" || position === "top";
+
+      const newSplit: SplitNode = {
+        type: "split",
+        direction,
+        ratio: 0.5,
+        first: isFirst ? movedLeaf : { type: "leaf", agentId: targetAgentId },
+        second: isFirst ? { type: "leaf", agentId: targetAgentId } : movedLeaf,
+      };
+
+      // 3. Replace the target leaf with the new split
+      tree = replaceLeaf(tree, targetAgentId, newSplit);
+
+      return { splitLayout: tree, draggedAgentId: null };
     });
   },
 }));

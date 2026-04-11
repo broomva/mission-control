@@ -308,6 +308,127 @@ describe("tileLayoutStore", () => {
     });
   });
 
+  describe("draggedAgentId", () => {
+    it("defaults to null", () => {
+      expect(useTileLayoutStore.getState().draggedAgentId).toBeNull();
+    });
+
+    it("sets the dragged agent", () => {
+      useTileLayoutStore.getState().setDraggedAgent("agent-1");
+      expect(useTileLayoutStore.getState().draggedAgentId).toBe("agent-1");
+    });
+
+    it("clears the dragged agent with null", () => {
+      useTileLayoutStore.getState().setDraggedAgent("agent-1");
+      useTileLayoutStore.getState().setDraggedAgent(null);
+      expect(useTileLayoutStore.getState().draggedAgentId).toBeNull();
+    });
+  });
+
+  describe("moveToSplit", () => {
+    it("does nothing when layout is null", () => {
+      useTileLayoutStore.getState().moveToSplit("a", "b", "left");
+      expect(useTileLayoutStore.getState().splitLayout).toBeNull();
+    });
+
+    it("does nothing when dragging onto itself", () => {
+      useTileLayoutStore.getState().addToSplit("agent-1");
+      useTileLayoutStore.getState().addToSplit("agent-2");
+      const before = useTileLayoutStore.getState().splitLayout;
+      useTileLayoutStore.getState().moveToSplit("agent-1", "agent-1", "left");
+      expect(useTileLayoutStore.getState().splitLayout).toEqual(before);
+    });
+
+    it("moves agent to the left of target (horizontal split)", () => {
+      useTileLayoutStore.getState().addToSplit("agent-1");
+      useTileLayoutStore.getState().addToSplit("agent-2");
+      useTileLayoutStore.getState().addToSplit("agent-3");
+
+      // Move agent-1 to the left of agent-3
+      useTileLayoutStore.getState().moveToSplit("agent-1", "agent-3", "left");
+      const layout = useTileLayoutStore.getState().splitLayout;
+      const ids = collectAgentIds(layout!);
+      expect(ids).toContain("agent-1");
+      expect(ids).toContain("agent-2");
+      expect(ids).toContain("agent-3");
+      expect(ids).toHaveLength(3);
+    });
+
+    it("moves agent to the right of target (horizontal split)", () => {
+      useTileLayoutStore.getState().addToSplit("agent-1");
+      useTileLayoutStore.getState().addToSplit("agent-2");
+
+      useTileLayoutStore.getState().moveToSplit("agent-1", "agent-2", "right");
+      const layout = useTileLayoutStore.getState().splitLayout;
+      expect(layout).not.toBeNull();
+      expect(layout!.type).toBe("split");
+      if (layout!.type === "split") {
+        expect(layout!.direction).toBe("horizontal");
+        expect(layout!.first).toEqual({ type: "leaf", agentId: "agent-2" });
+        expect(layout!.second).toEqual({ type: "leaf", agentId: "agent-1" });
+      }
+    });
+
+    it("moves agent to the top of target (vertical split)", () => {
+      useTileLayoutStore.getState().addToSplit("agent-1");
+      useTileLayoutStore.getState().addToSplit("agent-2");
+
+      useTileLayoutStore.getState().moveToSplit("agent-1", "agent-2", "top");
+      const layout = useTileLayoutStore.getState().splitLayout;
+      expect(layout).not.toBeNull();
+      expect(layout!.type).toBe("split");
+      if (layout!.type === "split") {
+        expect(layout!.direction).toBe("vertical");
+        expect(layout!.first).toEqual({ type: "leaf", agentId: "agent-1" });
+        expect(layout!.second).toEqual({ type: "leaf", agentId: "agent-2" });
+      }
+    });
+
+    it("moves agent to the bottom of target (vertical split)", () => {
+      useTileLayoutStore.getState().addToSplit("agent-1");
+      useTileLayoutStore.getState().addToSplit("agent-2");
+
+      useTileLayoutStore.getState().moveToSplit("agent-1", "agent-2", "bottom");
+      const layout = useTileLayoutStore.getState().splitLayout;
+      expect(layout).not.toBeNull();
+      expect(layout!.type).toBe("split");
+      if (layout!.type === "split") {
+        expect(layout!.direction).toBe("vertical");
+        expect(layout!.first).toEqual({ type: "leaf", agentId: "agent-2" });
+        expect(layout!.second).toEqual({ type: "leaf", agentId: "agent-1" });
+      }
+    });
+
+    it("clears draggedAgentId after move", () => {
+      useTileLayoutStore.getState().addToSplit("agent-1");
+      useTileLayoutStore.getState().addToSplit("agent-2");
+      useTileLayoutStore.getState().setDraggedAgent("agent-1");
+      useTileLayoutStore.getState().moveToSplit("agent-1", "agent-2", "left");
+      expect(useTileLayoutStore.getState().draggedAgentId).toBeNull();
+    });
+
+    it("creates correct split ratio of 0.5", () => {
+      useTileLayoutStore.getState().addToSplit("agent-1");
+      useTileLayoutStore.getState().addToSplit("agent-2");
+      useTileLayoutStore.getState().moveToSplit("agent-1", "agent-2", "left");
+      const layout = useTileLayoutStore.getState().splitLayout;
+      if (layout!.type === "split") {
+        expect(layout!.ratio).toBe(0.5);
+      }
+    });
+
+    it("preserves all agents when moving in a three-agent layout", () => {
+      useTileLayoutStore.getState().addToSplit("agent-1");
+      useTileLayoutStore.getState().addToSplit("agent-2");
+      useTileLayoutStore.getState().addToSplit("agent-3");
+
+      useTileLayoutStore.getState().moveToSplit("agent-3", "agent-1", "bottom");
+      const layout = useTileLayoutStore.getState().splitLayout;
+      const ids = collectAgentIds(layout!);
+      expect(ids.sort()).toEqual(["agent-1", "agent-2", "agent-3"]);
+    });
+  });
+
   describe("collectAgentIds", () => {
     it("returns a single id for a leaf", () => {
       expect(collectAgentIds({ type: "leaf", agentId: "a" })).toEqual(["a"]);

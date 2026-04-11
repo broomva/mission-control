@@ -3,6 +3,7 @@ import type { AgentInfo } from "../bindings";
 import type { LayoutNode } from "../stores/tileLayoutStore";
 import { useTileLayoutStore } from "../stores/tileLayoutStore";
 import { AgentTile } from "./AgentTile";
+import { TileDropZones } from "./TileDropZones";
 
 interface SplitContainerProps {
   layout: LayoutNode;
@@ -23,8 +24,9 @@ export function SplitContainer({
     const agent = agents.find((a) => a.id === layout.agentId);
     if (!agent) return null;
     return (
-      <div className="split-pane">
+      <div className="split-pane" style={{ position: "relative" }}>
         <AgentTile agent={agent} onClose={onClose} onMaximize={onMaximize} />
+        <TileDropZones targetAgentId={layout.agentId} />
       </div>
     );
   }
