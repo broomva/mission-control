@@ -4,6 +4,13 @@ import { AgentTerminalPanel } from "../panels/AgentTerminalPanel";
 import { useAgentStore } from "../stores/agentStore";
 import { useTileLayoutStore } from "../stores/tileLayoutStore";
 
+const AGENT_LABELS: Record<string, string> = {
+  "claude-code": "Claude Code",
+  codex: "Codex",
+  gemini: "Gemini CLI",
+  custom: "Custom",
+};
+
 type InternalTab = "terminal" | "chat" | "diff";
 
 interface AgentTileProps {
@@ -104,12 +111,30 @@ export function AgentTile({ agent, onClose, onMaximize }: AgentTileProps) {
       className={`agent-tile ${isWaiting ? "agent-tile-notification" : ""}`}
       data-agent-id={agent.id}
     >
-      {/* Header */}
+      {/* Header — draggable for rearranging */}
       <div
         className="agent-tile-header"
         role="toolbar"
+        draggable="true"
+        onDragStart={(e) => {
+          e.dataTransfer.setData("agent-id", agent.id);
+          e.dataTransfer.effectAllowed = "move";
+          useTileLayoutStore.getState().setDraggedAgent(agent.id);
+          // Custom drag image with agent name
+          const ghost = document.createElement("div");
+          ghost.className = "drag-ghost";
+          ghost.textContent = AGENT_LABELS[agent.agent_type] ?? agent.agent_type;
+          ghost.style.cssText = "position:fixed;top:-100px;padding:6px 16px;background:#2a2a27;color:#e8e4e0;border-radius:6px;font-size:13px;font-weight:500;border:1px solid rgba(45,212,168,0.4);pointer-events:none;z-index:9999";
+          document.body.appendChild(ghost);
+          e.dataTransfer.setDragImage(ghost, 60, 16);
+          requestAnimationFrame(() => ghost.remove());
+        }}
+        onDragEnd={() => {
+          useTileLayoutStore.getState().setDraggedAgent(null);
+        }}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
+        style={{ cursor: "grab" }}
       >
         <div className="agent-tile-header-left">
           <span
