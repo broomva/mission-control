@@ -131,12 +131,18 @@ impl AgentService {
                 c
             }
         };
-        // Inject gateway proxy env vars so the agent routes API calls
-        // through the auth gateway (which swaps in real credentials).
+        // Auth gateway proxy is disabled by default until fully production-ready.
+        // When enabled, it routes agent API calls through the gateway which
+        // swaps in real credentials (SuperHQ pattern).
+        // TODO: Re-enable once gateway handles all API providers correctly.
         if let Some(ref proxy_url) = gateway_proxy_url {
-            cmd.env("HTTP_PROXY", proxy_url);
-            cmd.env("HTTPS_PROXY", proxy_url);
-            info!(agent_id = %id, proxy = %proxy_url, "gateway proxy env set");
+            if std::env::var("MC_ENABLE_AUTH_GATEWAY").unwrap_or_default() == "1" {
+                cmd.env("HTTP_PROXY", proxy_url);
+                cmd.env("HTTPS_PROXY", proxy_url);
+                info!(agent_id = %id, proxy = %proxy_url, "gateway proxy env set");
+            } else {
+                info!(agent_id = %id, proxy = %proxy_url, "gateway proxy available but disabled (set MC_ENABLE_AUTH_GATEWAY=1 to enable)");
+            }
         }
 
         cmd.cwd(&cwd);
