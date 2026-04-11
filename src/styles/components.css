@@ -1108,6 +1108,14 @@
   background: var(--agent-idle);
 }
 
+.status-stopped {
+  background: var(--text-tertiary);
+}
+
+.status-completed {
+  background: var(--success, #30D158);
+}
+
 @keyframes pulse-green {
   0%,
   100% {
@@ -1187,13 +1195,17 @@
 
 .agent-tile-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   min-height: 0;
 }
 
 .agent-tile-terminal-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
   width: 100%;
-  height: 100%;
 }
 
 .agent-tile-placeholder {

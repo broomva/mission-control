@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentInfo } from "../bindings";
 import { AgentTerminalPanel } from "../panels/AgentTerminalPanel";
 import { useAgentStore } from "../stores/agentStore";
+import { useTileLayoutStore } from "../stores/tileLayoutStore";
 
 type InternalTab = "terminal" | "chat" | "diff";
 
@@ -19,6 +20,10 @@ function statusClass(status: string): string {
       return "status-waiting";
     case "error":
       return "status-error";
+    case "stopped":
+      return "status-stopped";
+    case "completed":
+      return "status-completed";
     default:
       return "status-idle";
   }
@@ -53,15 +58,20 @@ export function AgentTile({ agent, onClose, onMaximize }: AgentTileProps) {
     [contextMenuOpen],
   );
 
+  const isTerminated =
+    agent.status === "stopped" || agent.status === "completed";
+
   const handleStopAgent = useCallback(async () => {
     setContextMenuOpen(false);
-    await stopAgent(agent.id);
-  }, [agent.id, stopAgent]);
+    if (!isTerminated) {
+      await stopAgent(agent.id);
+    }
+  }, [agent.id, stopAgent, isTerminated]);
 
   const handleMinimize = useCallback(() => {
     setContextMenuOpen(false);
-    // Minimize is handled by the parent grid via tileLayoutStore
-  }, []);
+    useTileLayoutStore.getState().minimizeTile(agent.id);
+  }, [agent.id]);
 
   const handleCloseFromMenu = useCallback(() => {
     setContextMenuOpen(false);
@@ -106,7 +116,7 @@ export function AgentTile({ agent, onClose, onMaximize }: AgentTileProps) {
             className={`agent-tile-status-dot ${statusClass(agent.status)}`}
           />
           <span className="agent-tile-name">{agent.agent_type}</span>
-          <span className="agent-tile-model-badge">{agent.agent_type}</span>
+          <span className="agent-tile-model-badge">{agent.status}</span>
         </div>
         <div className="agent-tile-header-right">
           {totalTokens > 0 && (
@@ -132,7 +142,11 @@ export function AgentTile({ agent, onClose, onMaximize }: AgentTileProps) {
         {/* Context menu */}
         {contextMenuOpen && (
           <div className="agent-tile-context-menu" ref={contextMenuRef}>
-            <button type="button" onClick={handleStopAgent}>
+            <button
+              type="button"
+              onClick={handleStopAgent}
+              disabled={isTerminated}
+            >
               Stop Agent
             </button>
             <button type="button" onClick={handleMinimize}>

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { AgentInfo } from "../bindings";
+import { useAgentStore } from "../stores/agentStore";
 import { useTileLayoutStore } from "../stores/tileLayoutStore";
 import { AgentTile } from "./AgentTile";
 import { NewAgentTile } from "./NewAgentTile";
@@ -54,6 +55,11 @@ function gridStyle(tileCount: number): React.CSSProperties {
 export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
   const { maximizedTileId, minimizedTileIds } = useTileLayoutStore();
   const { maximizeTile, restoreGrid } = useTileLayoutStore();
+  const { stopAgent } = useAgentStore();
+
+  const handleCloseAgent = async (agentId: string) => {
+    await stopAgent(agentId);
+  };
 
   // Filter out minimized agents for the grid
   const visibleAgents = useMemo(
@@ -71,7 +77,10 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
       <div className="tile-grid tile-grid-maximized">
         <AgentTile
           agent={maximizedAgent}
-          onClose={() => restoreGrid()}
+          onClose={(id) => {
+            restoreGrid();
+            handleCloseAgent(id);
+          }}
           onMaximize={() => restoreGrid()}
         />
       </div>
@@ -97,10 +106,7 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
           >
             <AgentTile
               agent={agent}
-              onClose={() => {
-                // Stop and remove from grid
-                // The agent store handles lifecycle
-              }}
+              onClose={(id) => handleCloseAgent(id)}
               onMaximize={(id) => maximizeTile(id)}
             />
           </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useAgentStore } from "../stores/agentStore";
 import { useProjectStore } from "../stores/projectStore";
 
@@ -16,6 +16,7 @@ const AGENT_TYPES = [
 export function SpawnAgentDialog({ onClose }: SpawnAgentDialogProps) {
   const [agentType, setAgentType] = useState("claude-code");
   const [prompt, setPrompt] = useState("");
+  const [spawning, setSpawning] = useState(false);
   const { spawnAgent } = useAgentStore();
   const { activeProjectId, projects } = useProjectStore();
 
@@ -23,18 +24,33 @@ export function SpawnAgentDialog({ onClose }: SpawnAgentDialogProps) {
     ? projects.find((p) => p.id === activeProjectId)
     : null;
 
-  const handleSubmit = async () => {
-    if (!project) return;
-    const agent = await spawnAgent(
-      project.id,
-      agentType,
-      prompt.trim() || null,
-      project.path,
-    );
-    if (agent) {
-      onClose();
+  const handleSubmit = useCallback(async () => {
+    if (!project || spawning) return;
+    setSpawning(true);
+    try {
+      const agent = await spawnAgent(
+        project.id,
+        agentType,
+        prompt.trim() || null,
+        project.path,
+      );
+      if (agent) {
+        onClose();
+      }
+    } finally {
+      setSpawning(false);
     }
-  };
+  }, [project, spawning, spawnAgent, agentType, prompt, onClose]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    },
+    [handleSubmit],
+  );
 
   return (
     <div
@@ -50,7 +66,10 @@ export function SpawnAgentDialog({ onClose }: SpawnAgentDialogProps) {
         role="dialog"
         aria-label="Spawn Agent"
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          handleKeyDown(e);
+        }}
       >
         <h3>Spawn Agent</h3>
 
@@ -107,9 +126,9 @@ export function SpawnAgentDialog({ onClose }: SpawnAgentDialogProps) {
             type="button"
             className="btn btn-primary"
             onClick={handleSubmit}
-            disabled={!project}
+            disabled={!project || spawning}
           >
-            Spawn
+            {spawning ? "Spawning..." : "Spawn"}
           </button>
         </div>
       </div>
