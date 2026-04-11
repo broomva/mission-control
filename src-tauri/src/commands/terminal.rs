@@ -1,7 +1,17 @@
+use serde::{Deserialize, Serialize};
+use specta::Type;
 use tauri::{AppHandle, State};
 
 use crate::models::{AppError, TerminalInfo};
 use crate::services::{PersistenceService, TerminalService};
+
+/// Frontend-facing tmux session info
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct TmuxSessionResponse {
+    pub session_name: String,
+    pub terminal_id: String,
+    pub attached: bool,
+}
 
 #[tauri::command]
 #[specta::specta]
@@ -80,4 +90,30 @@ pub fn restore_terminal(
     app_handle: AppHandle,
 ) -> Result<TerminalInfo, AppError> {
     service.restore_terminal(&id, cols, rows, app_handle)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn list_tmux_sessions(
+    service: State<'_, TerminalService>,
+) -> Result<Vec<TmuxSessionResponse>, AppError> {
+    let sessions = service.list_tmux_sessions();
+    Ok(sessions
+        .into_iter()
+        .map(|s| TmuxSessionResponse {
+            session_name: s.session_name,
+            terminal_id: s.terminal_id,
+            attached: s.attached,
+        })
+        .collect())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn reconnect_tmux_sessions(
+    service: State<'_, TerminalService>,
+    app_handle: AppHandle,
+) -> Result<u32, AppError> {
+    let count = service.reconnect_tmux_sessions(app_handle);
+    Ok(count as u32)
 }

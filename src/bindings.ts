@@ -103,6 +103,22 @@ async restoreTerminal(id: string, cols: number, rows: number) : Promise<Result<T
     else return { status: "error", error: e  as any };
 }
 },
+async listTmuxSessions() : Promise<Result<TmuxSessionResponse[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_tmux_sessions") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async reconnectTmuxSessions() : Promise<Result<number, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reconnect_tmux_sessions") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async loadWorkspaceState() : Promise<Result<WorkspaceState, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("load_workspace_state") };
@@ -347,6 +363,10 @@ kind: string }
 export type TerminalDataEvent = { terminal_id: string; data: number[] }
 export type TerminalExitEvent = { terminal_id: string }
 export type TerminalInfo = { id: string; project_id: string; title: string; cols: number; rows: number; cwd: string; created_at: string; status: string; scrollback_path: string | null }
+/**
+ * Frontend-facing tmux session info
+ */
+export type TmuxSessionResponse = { session_name: string; terminal_id: string; attached: boolean }
 export type TokenUsage = { input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_creation_tokens: number; cost_usd: number }
 export type WorkspaceState = { layout: string | null; active_project_id: string | null }
 export type WorktreeInfo = { name: string; path: string; branch: string | null; is_main: boolean }
