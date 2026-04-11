@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { SpawnAgentDialog } from "../components/SpawnAgentDialog";
 import { TileGrid } from "../components/TileGrid";
 import { WorkspaceWelcome } from "../components/WorkspaceWelcome";
@@ -21,7 +21,6 @@ export function CenterPane({
 }: CenterPaneProps) {
   const { activeProjectId } = useProjectStore();
   const { agents, fetchAgents, setupEventListeners } = useAgentStore();
-  const { splitLayout } = useTileLayoutStore();
   const { addToSplit } = useTileLayoutStore();
 
   // Wire agent file_write events to review queue
@@ -45,25 +44,32 @@ export function CenterPane({
     };
   }, [setupEventListeners]);
 
-  // Auto-add new agents to split layout
+  // Auto-add new agents to split layout (only when agents array changes)
+  const prevAgentIdsRef = useRef<string[]>([]);
   useEffect(() => {
     if (!activeProjectId) return;
     const projectAgents = agents.filter(
       (a) => a.project_id === activeProjectId,
     );
-    for (const agent of projectAgents) {
-      // Check if agent is already in the split layout
-      if (splitLayout) {
-        const existingIds = collectIds(splitLayout);
-        if (!existingIds.includes(agent.id)) {
-          addToSplit(agent.id);
+    const currentIds = projectAgents.map((a) => a.id);
+    const prevIds = prevAgentIdsRef.current;
+
+    // Only process genuinely new agents (not already tracked)
+    const newIds = currentIds.filter((id) => !prevIds.includes(id));
+    prevAgentIdsRef.current = currentIds;
+
+    for (const id of newIds) {
+      const layout = useTileLayoutStore.getState().splitLayout;
+      if (layout) {
+        const existingIds = collectIds(layout);
+        if (!existingIds.includes(id)) {
+          addToSplit(id);
         }
-      } else if (projectAgents.length > 0) {
-        // First agent — initialize the split layout
-        addToSplit(agent.id);
+      } else {
+        addToSplit(id);
       }
     }
-  }, [agents, activeProjectId, splitLayout, addToSplit]);
+  }, [agents, activeProjectId, addToSplit]);
 
   // Filter agents by active project
   const projectAgents = activeProjectId
