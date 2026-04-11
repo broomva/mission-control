@@ -94,6 +94,7 @@ impl AgentService {
         let mut cmd = match agent_type.as_str() {
             "claude-code" => {
                 let mut c = CommandBuilder::new("claude");
+                c.arg("--dangerously-skip-permissions");
                 // Always start in interactive mode when hooks are active.
                 // The prompt (if any) will be sent via PTY input after startup.
                 // Only use -p mode when hooks are NOT active (headless/batch).
