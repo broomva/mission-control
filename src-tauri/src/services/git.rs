@@ -4,8 +4,9 @@ use std::sync::Mutex;
 use git2::{Oid, Repository, Sort, StatusOptions, WorktreeAddOptions, WorktreePruneOptions};
 
 use crate::models::git::{
-    BranchInfo, CommitDetail, CommitInfo, DiffFile, DiffHunk, DiffInfo, DiffLine, DiffStats,
-    FileDiff, FileStatusEntry, GitGraphData, GraphCommit, GraphEdge, RefLabel, WorktreeInfo,
+    BranchInfo, CheckpointInfo, CommitDetail, CommitInfo, DiffFile, DiffHunk, DiffInfo, DiffLine,
+    DiffStats, FileDiff, FileStatusEntry, GitGraphData, GraphCommit, GraphEdge, RefLabel,
+    WorktreeInfo,
 };
 use crate::models::AppError;
 
@@ -644,6 +645,195 @@ impl GitService {
         })
     }
 
+    // ── Checkpoints ──────────────────────────────────────────────
+
+    /// Create a checkpoint as an annotated git tag pointing at HEAD.
+    pub fn create_checkpoint(
+        &self,
+        project_id: &str,
+        path: &str,
+        description: &str,
+        agent_id: Option<&str>,
+    ) -> Result<CheckpointInfo, AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        let head = repo.head()?;
+        let commit = head.peel_to_commit().map_err(|e| {
+            AppError::GitError(format!("Cannot resolve HEAD to commit: {}", e))
+        })?;
+        let commit_oid = commit.id().to_string();
+
+        let id = uuid::Uuid::new_v4().to_string();
+        let tag_name = format!("mc-checkpoint-{}", id);
+        let now = chrono::Utc::now();
+        let timestamp = now.to_rfc3339();
+
+        // Build annotation message as JSON for structured retrieval
+        let annotation = serde_json::json!({
+            "id": id,
+            "project_id": project_id,
+            "agent_id": agent_id,
+            "description": description,
+            "timestamp": timestamp,
+        });
+
+        let sig = repo.signature().or_else(|_| {
+            git2::Signature::now("Mission Control", "mc@localhost")
+        })?;
+
+        repo.tag(
+            &tag_name,
+            commit.as_object(),
+            &sig,
+            &annotation.to_string(),
+            false,
+        )
+        .map_err(|e| AppError::GitError(format!("Failed to create checkpoint tag: {}", e)))?;
+
+        Ok(CheckpointInfo {
+            id,
+            project_id: project_id.to_string(),
+            agent_id: agent_id.map(|s| s.to_string()),
+            description: description.to_string(),
+            commit_oid,
+            timestamp,
+        })
+    }
+
+    /// List all checkpoints (tags matching mc-checkpoint-*).
+    pub fn list_checkpoints(
+        &self,
+        project_id: &str,
+        path: &str,
+    ) -> Result<Vec<CheckpointInfo>, AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        let mut checkpoints = Vec::new();
+        let tag_names = repo.tag_names(Some("mc-checkpoint-*"))?;
+
+        for i in 0..tag_names.len() {
+            if let Some(name) = tag_names.get(i) {
+                let ref_name = format!("refs/tags/{}", name);
+                if let Ok(reference) = repo.find_reference(&ref_name) {
+                    if let Ok(tag) = reference.peel_to_tag() {
+                        let message = tag.message().unwrap_or("{}").to_string();
+                        let commit_oid = tag
+                            .target()
+                            .ok()
+                            .and_then(|obj| obj.into_commit().ok())
+                            .map(|c| c.id().to_string())
+                            .unwrap_or_default();
+
+                        // Parse stored annotation JSON
+                        if let Ok(meta) = serde_json::from_str::<serde_json::Value>(&message) {
+                            checkpoints.push(CheckpointInfo {
+                                id: meta["id"].as_str().unwrap_or("").to_string(),
+                                project_id: meta["project_id"]
+                                    .as_str()
+                                    .unwrap_or(project_id)
+                                    .to_string(),
+                                agent_id: meta["agent_id"].as_str().map(|s| s.to_string()),
+                                description: meta["description"]
+                                    .as_str()
+                                    .unwrap_or("")
+                                    .to_string(),
+                                commit_oid,
+                                timestamp: meta["timestamp"].as_str().unwrap_or("").to_string(),
+                            });
+                        }
+                    } else {
+                        // Lightweight tag — extract id from name, get target commit
+                        let id = name.strip_prefix("mc-checkpoint-").unwrap_or(name);
+                        let commit_oid = reference
+                            .peel_to_commit()
+                            .map(|c| c.id().to_string())
+                            .unwrap_or_default();
+                        checkpoints.push(CheckpointInfo {
+                            id: id.to_string(),
+                            project_id: project_id.to_string(),
+                            agent_id: None,
+                            description: String::new(),
+                            commit_oid,
+                            timestamp: String::new(),
+                        });
+                    }
+                }
+            }
+        }
+
+        // Sort newest first
+        checkpoints.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        Ok(checkpoints)
+    }
+
+    /// Rollback to a checkpoint by resetting HEAD to the checkpoint's commit.
+    pub fn rollback_to_checkpoint(
+        &self,
+        project_id: &str,
+        path: &str,
+        checkpoint_id: &str,
+    ) -> Result<(), AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        let tag_name = format!("mc-checkpoint-{}", checkpoint_id);
+        let ref_name = format!("refs/tags/{}", tag_name);
+
+        let reference = repo.find_reference(&ref_name).map_err(|_| {
+            AppError::GitError(format!("Checkpoint '{}' not found", checkpoint_id))
+        })?;
+
+        let commit = reference.peel_to_commit().map_err(|e| {
+            AppError::GitError(format!("Cannot resolve checkpoint to commit: {}", e))
+        })?;
+
+        let commit_obj = commit.as_object();
+        repo.reset(commit_obj, git2::ResetType::Hard, None)
+            .map_err(|e| AppError::GitError(format!("Failed to rollback: {}", e)))?;
+
+        Ok(())
+    }
+
+    /// Delete a checkpoint tag.
+    pub fn delete_checkpoint(
+        &self,
+        project_id: &str,
+        path: &str,
+        checkpoint_id: &str,
+    ) -> Result<(), AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        let tag_name = format!("mc-checkpoint-{}", checkpoint_id);
+        let ref_name = format!("refs/tags/{}", tag_name);
+
+        // Delete the tag reference
+        repo.find_reference(&ref_name)
+            .and_then(|mut r| r.delete())
+            .map_err(|e| {
+                AppError::GitError(format!(
+                    "Failed to delete checkpoint '{}': {}",
+                    checkpoint_id, e
+                ))
+            })?;
+
+        Ok(())
+    }
+
     #[allow(dead_code)]
     pub fn refresh_repo(&self, project_id: &str, path: &str) -> Result<(), AppError> {
         let mut repos = self.repos.lock().unwrap();
@@ -1020,6 +1210,129 @@ mod tests {
             .unwrap();
         assert_eq!(worktrees.len(), 1);
         assert!(worktrees[0].is_main);
+    }
+
+    #[test]
+    fn test_create_and_list_checkpoints() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let path_str = tmp.path().to_str().unwrap();
+
+        // Create a checkpoint
+        let cp = service
+            .create_checkpoint("test", path_str, "Before editing", None)
+            .unwrap();
+        assert!(!cp.id.is_empty());
+        assert_eq!(cp.description, "Before editing");
+        assert_eq!(cp.project_id, "test");
+        assert!(!cp.commit_oid.is_empty());
+
+        // List checkpoints
+        let checkpoints = service.list_checkpoints("test", path_str).unwrap();
+        assert_eq!(checkpoints.len(), 1);
+        assert_eq!(checkpoints[0].id, cp.id);
+        assert_eq!(checkpoints[0].description, "Before editing");
+    }
+
+    #[test]
+    fn test_checkpoint_with_agent_id() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let path_str = tmp.path().to_str().unwrap();
+
+        let cp = service
+            .create_checkpoint("test", path_str, "Agent change", Some("agent-1"))
+            .unwrap();
+        assert_eq!(cp.agent_id, Some("agent-1".to_string()));
+
+        let checkpoints = service.list_checkpoints("test", path_str).unwrap();
+        assert_eq!(checkpoints[0].agent_id, Some("agent-1".to_string()));
+    }
+
+    #[test]
+    fn test_delete_checkpoint() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let path_str = tmp.path().to_str().unwrap();
+
+        let cp = service
+            .create_checkpoint("test", path_str, "temp", None)
+            .unwrap();
+
+        // Should exist
+        let checkpoints = service.list_checkpoints("test", path_str).unwrap();
+        assert_eq!(checkpoints.len(), 1);
+
+        // Delete it
+        service.delete_checkpoint("test", path_str, &cp.id).unwrap();
+
+        // Should be gone
+        let checkpoints = service.list_checkpoints("test", path_str).unwrap();
+        assert_eq!(checkpoints.len(), 0);
+    }
+
+    #[test]
+    fn test_rollback_to_checkpoint() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "original", "initial");
+
+        let service = GitService::new();
+        let path_str = tmp.path().to_str().unwrap();
+
+        // Create checkpoint at "original" state
+        let cp = service
+            .create_checkpoint("test", path_str, "original state", None)
+            .unwrap();
+
+        // Make more changes and commit
+        create_commit(&repo, tmp.path(), "file.txt", "modified", "second");
+
+        // Verify the file is "modified"
+        let content = fs::read_to_string(tmp.path().join("file.txt")).unwrap();
+        assert_eq!(content, "modified");
+
+        // Rollback
+        service.rollback_to_checkpoint("test", path_str, &cp.id).unwrap();
+
+        // File should be back to "original"
+        let content = fs::read_to_string(tmp.path().join("file.txt")).unwrap();
+        assert_eq!(content, "original");
+    }
+
+    #[test]
+    fn test_delete_nonexistent_checkpoint() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let path_str = tmp.path().to_str().unwrap();
+
+        let result = service.delete_checkpoint("test", path_str, "nonexistent-id");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_rollback_nonexistent_checkpoint() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let path_str = tmp.path().to_str().unwrap();
+
+        let result = service.rollback_to_checkpoint("test", path_str, "nonexistent-id");
+        assert!(result.is_err());
     }
 
     #[test]

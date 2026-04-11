@@ -286,6 +286,38 @@ async getTimeline(projectId: string, offset: number, limit: number) : Promise<Re
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async listCredentials() : Promise<Result<string[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_credentials") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async addCredential(service: string, key: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_credential", { service, key }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async removeCredential(service: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("remove_credential", { service }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getGatewayStatus() : Promise<Result<GatewayStatus, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_gateway_status") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -350,6 +382,7 @@ export type FileStatusEntry = { path: string;
  */
 status: string }
 export type FsChangeEvent = { project_id: string; paths: string[] }
+export type GatewayStatus = { port: number; running: boolean; active_sessions: number; configured_routes: string[]; configured_services: string[] }
 export type GitGraphData = { commits: GraphCommit[]; edges: GraphEdge[]; max_lanes: number }
 export type GitRefChangedEvent = { project_id: string }
 export type GraphCommit = { sha: string; short_sha: string; message: string; author: string; author_email: string; timestamp: number; parent_shas: string[]; lane: number; refs: RefLabel[] }

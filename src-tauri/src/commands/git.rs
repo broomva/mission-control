@@ -1,7 +1,8 @@
 use tauri::{AppHandle, State};
 
 use crate::models::git::{
-    BranchInfo, CommitDetail, CommitInfo, DiffInfo, FileStatusEntry, GitGraphData, WorktreeInfo,
+    BranchInfo, CheckpointInfo, CommitDetail, CommitInfo, DiffInfo, FileStatusEntry, GitGraphData,
+    WorktreeInfo,
 };
 use crate::models::AppError;
 use crate::services::{FsWatcherService, GitService};
@@ -80,6 +81,55 @@ pub fn remove_worktree(
     service: State<'_, GitService>,
 ) -> Result<(), AppError> {
     service.remove_worktree(&project_id, &path, &name)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn create_checkpoint(
+    project_id: String,
+    path: String,
+    description: String,
+    agent_id: Option<String>,
+    service: State<'_, GitService>,
+) -> Result<CheckpointInfo, AppError> {
+    service.create_checkpoint(
+        &project_id,
+        &path,
+        &description,
+        agent_id.as_deref(),
+    )
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn list_checkpoints(
+    project_id: String,
+    path: String,
+    service: State<'_, GitService>,
+) -> Result<Vec<CheckpointInfo>, AppError> {
+    service.list_checkpoints(&project_id, &path)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn rollback_to_checkpoint(
+    project_id: String,
+    path: String,
+    checkpoint_id: String,
+    service: State<'_, GitService>,
+) -> Result<(), AppError> {
+    service.rollback_to_checkpoint(&project_id, &path, &checkpoint_id)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn delete_checkpoint(
+    project_id: String,
+    path: String,
+    checkpoint_id: String,
+    service: State<'_, GitService>,
+) -> Result<(), AppError> {
+    service.delete_checkpoint(&project_id, &path, &checkpoint_id)
 }
 
 #[tauri::command]

@@ -47,6 +47,7 @@ impl AgentService {
         app_handle: AppHandle,
         hook_port: Option<u16>,
         hook_agents: Option<&Arc<Mutex<HashMap<String, HookAgentContext>>>>,
+        gateway_proxy_url: Option<String>,
     ) -> Result<AgentInfo, AppError> {
         let id = Uuid::new_v4().to_string();
         let pty_system = native_pty_system();
@@ -129,6 +130,14 @@ impl AgentService {
                 c
             }
         };
+        // Inject gateway proxy env vars so the agent routes API calls
+        // through the auth gateway (which swaps in real credentials).
+        if let Some(ref proxy_url) = gateway_proxy_url {
+            cmd.env("HTTP_PROXY", proxy_url);
+            cmd.env("HTTPS_PROXY", proxy_url);
+            info!(agent_id = %id, proxy = %proxy_url, "gateway proxy env set");
+        }
+
         cmd.cwd(&cwd);
 
         let child = pair
@@ -234,6 +243,7 @@ impl AgentService {
         app_handle: AppHandle,
         hook_port: Option<u16>,
         hook_agents: Option<&Arc<Mutex<HashMap<String, HookAgentContext>>>>,
+        gateway_proxy_url: Option<String>,
     ) -> Result<AgentInfo, AppError> {
         let (session_id, agent_type, project_id, cwd) = {
             let agents = self.agents.lock().unwrap();
@@ -260,6 +270,7 @@ impl AgentService {
             app_handle,
             hook_port,
             hook_agents,
+            gateway_proxy_url,
         )
     }
 

@@ -130,3 +130,13 @@ pub struct DiffFile {
     pub additions: u32,
     pub deletions: u32,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct CheckpointInfo {
+    pub id: String,
+    pub project_id: String,
+    pub agent_id: Option<String>,
+    pub description: String,
+    pub commit_oid: String,
+    pub timestamp: String,
+}

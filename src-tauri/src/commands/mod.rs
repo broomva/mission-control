@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod credentials;
 pub mod fs;
 pub mod git;
 pub mod project;

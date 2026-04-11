@@ -5,8 +5,8 @@ mod services;
 use std::sync::{Arc, Mutex};
 
 use services::{
-    hook_server, AgentService, FsWatcherService, GitService, PersistenceService, ProjectService,
-    TerminalService,
+    auth_gateway, hook_server, AgentService, AuthGateway, CredentialStore, FsWatcherService,
+    GitService, PersistenceService, ProjectService, TerminalService,
 };
 use tauri::Manager;
 use tauri_specta::{collect_commands, collect_events, Builder};
@@ -33,8 +33,6 @@ fn create_specta_builder() -> Builder {
             commands::terminal::list_project_terminals,
             commands::terminal::get_terminal_scrollback,
             commands::terminal::restore_terminal,
-            commands::terminal::list_tmux_sessions,
-            commands::terminal::reconnect_tmux_sessions,
             commands::workspace::load_workspace_state,
             commands::workspace::save_workspace_state,
             commands::fs::read_directory,
@@ -45,6 +43,10 @@ fn create_specta_builder() -> Builder {
             commands::git::list_worktrees,
             commands::git::create_worktree,
             commands::git::remove_worktree,
+            commands::git::create_checkpoint,
+            commands::git::list_checkpoints,
+            commands::git::rollback_to_checkpoint,
+            commands::git::delete_checkpoint,
             commands::git::watch_project,
             commands::git::git_graph,
             commands::git::git_commit_detail,
@@ -56,6 +58,10 @@ fn create_specta_builder() -> Builder {
             commands::agent::list_agents,
             commands::agent::get_agent,
             commands::agent::get_timeline,
+            commands::credentials::list_credentials,
+            commands::credentials::add_credential,
+            commands::credentials::remove_credential,
+            commands::credentials::get_gateway_status,
         ])
         .events(collect_events![
             TerminalDataEvent,
@@ -109,6 +115,13 @@ pub fn run() {
     let shared_timeline = Arc::new(Mutex::new(Vec::new()));
     let agent_service = AgentService::new(Arc::clone(&shared_timeline));
 
+    // Credential store — lives in a separate file from the main DB
+    let cred_path = dirs::home_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join(".mission-control")
+        .join("credentials.bin");
+    let credential_store = Arc::new(CredentialStore::new(cred_path));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
@@ -123,7 +136,19 @@ pub fn run() {
                     .expect("failed to start hook server")
             });
 
+            // Start auth gateway for credential isolation
+            let gateway = tauri::async_runtime::block_on(async {
+                AuthGateway::start(
+                    Arc::clone(&credential_store),
+                    auth_gateway::default_auth_routes(),
+                )
+                .await
+                .expect("failed to start auth gateway")
+            });
+
             app.manage(hook_state);
+            app.manage(gateway);
+            app.manage(credential_store);
             Ok(())
         })
         .manage(persistence)

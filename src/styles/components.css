@@ -1889,3 +1889,112 @@
   white-space: nowrap;
   min-width: 0;
 }
+
+/* ============================================================
+   Credential Settings (BRO-655)
+   ============================================================ */
+
+.credential-settings-dialog {
+  width: 520px;
+}
+
+.credential-gateway-status {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.credential-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) 0;
+  font-size: var(--text-sm);
+}
+
+.credential-status-label {
+  color: var(--text-tertiary);
+}
+
+.credential-status-value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.credential-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.credential-status-port {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.credential-list-section {
+  margin-bottom: var(--space-5);
+}
+
+.credential-section-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.credential-loading,
+.credential-empty {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  padding: var(--space-3) 0;
+}
+
+.credential-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+  background: var(--glass-bg);
+}
+
+.credential-service-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 100px;
+}
+
+.credential-key-placeholder {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  letter-spacing: 2px;
+}
+
+.credential-remove-btn {
+  padding: var(--space-1) var(--space-3) !important;
+  font-size: var(--text-xs) !important;
+}
+
+.credential-add-section {
+  border-top: 1px solid var(--glass-border);
+  padding-top: var(--space-5);
+}
+
+.credential-error {
+  color: var(--danger);
+  font-size: var(--text-sm);
+  margin-top: var(--space-2);
+}

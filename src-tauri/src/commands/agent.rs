@@ -1,6 +1,7 @@
 use tauri::{AppHandle, State};
 
 use crate::models::{AgentEvent, AgentInfo, AppError};
+use crate::services::auth_gateway::AuthGateway;
 use crate::services::hook_server::HookServerState;
 use crate::services::AgentService;
 
@@ -13,9 +14,12 @@ pub fn spawn_agent(
     cwd: String,
     service: State<'_, AgentService>,
     hook_state: State<'_, HookServerState>,
+    gateway: State<'_, AuthGateway>,
     app_handle: AppHandle,
 ) -> Result<AgentInfo, AppError> {
-    service.spawn(
+    let proxy_url = gateway.proxy_url();
+
+    let info = service.spawn(
         project_id,
         agent_type,
         prompt,
@@ -25,7 +29,13 @@ pub fn spawn_agent(
         app_handle,
         Some(hook_state.port),
         Some(&hook_state.agents),
-    )
+        Some(proxy_url),
+    )?;
+
+    // Create a gateway session for this agent
+    gateway.create_session(&info.id);
+
+    Ok(info)
 }
 
 #[tauri::command]
@@ -33,7 +43,10 @@ pub fn spawn_agent(
 pub fn stop_agent(
     agent_id: String,
     service: State<'_, AgentService>,
+    gateway: State<'_, AuthGateway>,
 ) -> Result<(), AppError> {
+    // Revoke the gateway session on stop
+    gateway.revoke_session(&agent_id);
     service.stop(&agent_id)
 }
 
@@ -43,16 +56,25 @@ pub fn resume_agent(
     agent_id: String,
     service: State<'_, AgentService>,
     hook_state: State<'_, HookServerState>,
+    gateway: State<'_, AuthGateway>,
     app_handle: AppHandle,
 ) -> Result<AgentInfo, AppError> {
-    service.resume(
+    let proxy_url = gateway.proxy_url();
+
+    let info = service.resume(
         &agent_id,
         80,
         24,
         app_handle,
         Some(hook_state.port),
         Some(&hook_state.agents),
-    )
+        Some(proxy_url),
+    )?;
+
+    // Create a new gateway session for the resumed agent
+    gateway.create_session(&info.id);
+
+    Ok(info)
 }
 
 #[tauri::command]

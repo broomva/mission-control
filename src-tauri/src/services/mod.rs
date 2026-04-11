@@ -1,4 +1,6 @@
 pub mod agent;
+pub mod auth_gateway;
+pub mod credential_store;
 pub mod database;
 pub mod fs_watcher;
 pub mod git;
@@ -10,6 +12,8 @@ pub mod project;
 pub mod terminal;
 
 pub use agent::AgentService;
+pub use auth_gateway::AuthGateway;
+pub use credential_store::CredentialStore;
 pub use fs_watcher::FsWatcherService;
 pub use git::GitService;
 pub use persistence::PersistenceService;

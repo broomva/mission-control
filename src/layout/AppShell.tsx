@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { CredentialSettings } from "../components/CredentialSettings";
 import { StatusBar } from "../components/StatusBar";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useAgentStore } from "../stores/agentStore";
@@ -11,6 +12,7 @@ export function AppShell() {
   const { fetchProjects } = useProjectStore();
   const { stopAgent } = useAgentStore();
   const [showSpawnDialog, setShowSpawnDialog] = useState(false);
+  const [showCredentialSettings, setShowCredentialSettings] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -36,6 +38,16 @@ export function AppShell() {
     <div className="app-shell">
       <div className="toolbar">
         <span className="toolbar-title">Mission Control</span>
+        <div className="toolbar-actions">
+          <button
+            className="btn-toolbar"
+            onClick={() => setShowCredentialSettings(true)}
+            title="Credential Settings"
+            type="button"
+          >
+            &#9881;
+          </button>
+        </div>
       </div>
       <div className="app-body">
         <Sidebar />
@@ -47,6 +59,11 @@ export function AppShell() {
         <ReviewPane />
       </div>
       <StatusBar />
+      {showCredentialSettings && (
+        <CredentialSettings
+          onClose={() => setShowCredentialSettings(false)}
+        />
+      )}
     </div>
   );
 }

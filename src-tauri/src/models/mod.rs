@@ -17,8 +17,8 @@ pub use fs::DirectoryEntry;
 // Re-exported for crate-level API surface (used by commands/git.rs via crate::models::git::*)
 #[allow(unused_imports)]
 pub use git::{
-    BranchInfo, CommitDetail, CommitInfo, DiffFile, DiffInfo, FileStatusEntry, GitGraphData,
-    GraphCommit, GraphEdge, RefLabel, WorktreeInfo,
+    BranchInfo, CheckpointInfo, CommitDetail, CommitInfo, DiffFile, DiffInfo, FileStatusEntry,
+    GitGraphData, GraphCommit, GraphEdge, RefLabel, WorktreeInfo,
 };
 pub use project::Project;
 pub use terminal::TerminalInfo;
