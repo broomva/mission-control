@@ -13,6 +13,7 @@ interface AgentState {
     cwd: string,
   ) => Promise<AgentInfo | null>;
   stopAgent: (agentId: string) => Promise<void>;
+  removeAgent: (agentId: string) => void;
   resumeAgent: (agentId: string) => Promise<AgentInfo | null>;
   writeAgent: (agentId: string, data: number[]) => Promise<void>;
   fetchAgents: (projectId?: string) => Promise<void>;
@@ -44,6 +45,13 @@ export const useAgentStore = create<AgentState>((set) => ({
       agents: state.agents.map((a) =>
         a.id === agentId ? { ...a, status: "stopped" } : a,
       ),
+    }));
+  },
+
+  removeAgent: (agentId) => {
+    set((state) => ({
+      agents: state.agents.filter((a) => a.id !== agentId),
+      timeline: state.timeline.filter((e) => e.agent_id !== agentId),
     }));
   },
 

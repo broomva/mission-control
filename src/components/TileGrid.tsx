@@ -32,11 +32,12 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
     splitLayout,
   } = useTileLayoutStore();
   const { maximizeTile, restoreGrid, setFocusedTile } = useTileLayoutStore();
-  const { stopAgent } = useAgentStore();
+  const { stopAgent, removeAgent } = useAgentStore();
 
-  const handleCloseAgent = (id: string) => {
+  const handleCloseAgent = async (id: string) => {
     useTileLayoutStore.getState().removeFromSplit(id);
-    stopAgent(id);
+    await stopAgent(id);
+    removeAgent(id);
   };
 
   const visibleAgents = useMemo(
