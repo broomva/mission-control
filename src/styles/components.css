@@ -941,3 +941,380 @@
   overflow-y: auto;
   padding: var(--space-3);
 }
+
+/* ============================================================
+   Tile Grid — Tiled Agent Layout (BRO-627)
+   ============================================================ */
+
+.tile-grid {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  grid-auto-rows: 1fr;
+  position: relative;
+}
+
+.tile-grid-maximized {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr !important;
+}
+
+.tile-grid-cell {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.tile-grid-cell-span {
+  grid-column: 1 / -1;
+}
+
+/* ============================================================
+   Agent Tile — Self-contained agent viewport
+   ============================================================ */
+
+.agent-tile {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-glass);
+  overflow: hidden;
+  position: relative;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-normal);
+}
+
+.agent-tile:hover {
+  border-color: var(--glass-border-hover);
+}
+
+.agent-tile-notification {
+  border-color: var(--agent-waiting);
+  box-shadow: 0 0 12px rgba(255, 214, 10, 0.15);
+}
+
+/* --- Tile Header --- */
+
+.agent-tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+  position: relative;
+}
+
+.agent-tile-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.agent-tile-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.agent-tile-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agent-tile-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-tile-model-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.agent-tile-tokens {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.agent-tile-cost {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+}
+
+.agent-tile-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 var(--space-1);
+  transition: color var(--transition-fast);
+}
+
+.agent-tile-close-btn:hover {
+  color: var(--danger);
+}
+
+/* --- Status dot animations --- */
+
+.status-running {
+  background: var(--agent-running);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.status-waiting {
+  background: var(--agent-waiting);
+  animation: flash-amber 1s ease-in-out infinite;
+}
+
+.status-error {
+  background: var(--agent-error);
+}
+
+.status-idle {
+  background: var(--agent-idle);
+}
+
+@keyframes pulse-green {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.4);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 4px rgba(48, 209, 88, 0);
+  }
+}
+
+@keyframes flash-amber {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* --- Tile notification badge --- */
+
+.tile-notification-badge {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--agent-waiting);
+  color: var(--bg-canvas);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  animation: flash-amber 1s ease-in-out infinite;
+}
+
+/* --- Tile internal tab bar --- */
+
+.agent-tile-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.agent-tile-tab {
+  flex: 1;
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.agent-tile-tab:hover {
+  color: var(--text-secondary);
+}
+
+.agent-tile-tab-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* --- Tile content area --- */
+
+.agent-tile-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.agent-tile-terminal-container {
+  width: 100%;
+  height: 100%;
+}
+
+.agent-tile-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+/* --- Context menu --- */
+
+.agent-tile-context-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: rgba(30, 30, 50, 0.92);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-elevated);
+  z-index: var(--z-overlay);
+  min-width: 140px;
+  padding: var(--space-1) 0;
+}
+
+.agent-tile-context-menu button {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.agent-tile-context-menu button:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   New Agent Tile — [+] spawn placeholder
+   ============================================================ */
+
+.new-agent-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  background: transparent;
+  border: 2px dashed var(--glass-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-tertiary);
+  font-family: inherit;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.new-agent-tile:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 122, 255, 0.04);
+}
+
+.new-agent-tile-icon {
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.new-agent-tile-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+/* ============================================================
+   Minimized Tiles Row
+   ============================================================ */
+
+.tile-minimized-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.tile-minimized-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.tile-minimized-chip:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+}
