@@ -159,6 +159,30 @@ async gitBranches(projectId: string, path: string) : Promise<Result<BranchInfo[]
     else return { status: "error", error: e  as any };
 }
 },
+async listWorktrees(projectId: string, path: string) : Promise<Result<WorktreeInfo[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_worktrees", { projectId, path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async createWorktree(projectId: string, path: string, name: string, branch: string) : Promise<Result<WorktreeInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_worktree", { projectId, path, name, branch }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async removeWorktree(projectId: string, path: string, name: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("remove_worktree", { projectId, path, name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async watchProject(projectId: string, path: string) : Promise<Result<null, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("watch_project", { projectId, path }) };
@@ -295,6 +319,7 @@ export type TerminalExitEvent = { terminal_id: string }
 export type TerminalInfo = { id: string; project_id: string; title: string; cols: number; rows: number; cwd: string; created_at: string; status: string; scrollback_path: string | null }
 export type TokenUsage = { input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_creation_tokens: number; cost_usd: number }
 export type WorkspaceState = { layout: string | null; active_project_id: string | null }
+export type WorktreeInfo = { name: string; path: string; branch: string | null; is_main: boolean }
 
 /** tauri-specta globals **/
 

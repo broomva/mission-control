@@ -4,6 +4,7 @@ import { AgentCard } from "../components/AgentCard";
 import { FileTreeView } from "../components/FileTreeView";
 import { GitLogView } from "../components/GitLogView";
 import { SpawnAgentDialog } from "../components/SpawnAgentDialog";
+import { WorktreeManager } from "../components/WorktreeManager";
 import { useAgentStore } from "../stores/agentStore";
 import { useGitStore } from "../stores/gitStore";
 import { useLayoutStore } from "../stores/layoutStore";
@@ -126,6 +127,13 @@ export function Sidebar() {
               </button>
               <button
                 type="button"
+                className={`sidebar-detail-tab ${sidebarTab === "worktrees" ? "sidebar-detail-tab-active" : ""}`}
+                onClick={() => setSidebarTab("worktrees")}
+              >
+                Trees
+              </button>
+              <button
+                type="button"
                 className={`sidebar-detail-tab ${sidebarTab === "agents" ? "sidebar-detail-tab-active" : ""}`}
                 onClick={() => setSidebarTab("agents")}
               >
@@ -137,6 +145,11 @@ export function Sidebar() {
                 <FileTreeView rootPath={project.path} gitStatuses={statuses} />
               ) : sidebarTab === "git" ? (
                 <GitLogView projectId={project.id} projectPath={project.path} />
+              ) : sidebarTab === "worktrees" ? (
+                <WorktreeManager
+                  projectId={project.id}
+                  projectPath={project.path}
+                />
               ) : (
                 <div className="agents-tab">
                   <div className="agents-tab-header">

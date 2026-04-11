@@ -2,6 +2,14 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct WorktreeInfo {
+    pub name: String,
+    pub path: String,
+    pub branch: Option<String>,
+    pub is_main: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CommitInfo {
     pub oid: String,
     pub short_oid: String,

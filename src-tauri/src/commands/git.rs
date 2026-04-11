@@ -1,6 +1,6 @@
 use tauri::{AppHandle, State};
 
-use crate::models::git::{BranchInfo, CommitInfo, DiffInfo, FileStatusEntry};
+use crate::models::git::{BranchInfo, CommitInfo, DiffInfo, FileStatusEntry, WorktreeInfo};
 use crate::models::AppError;
 use crate::services::{FsWatcherService, GitService};
 
@@ -45,6 +45,39 @@ pub fn git_branches(
     service: State<'_, GitService>,
 ) -> Result<Vec<BranchInfo>, AppError> {
     service.get_branches(&project_id, &path)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn list_worktrees(
+    project_id: String,
+    path: String,
+    service: State<'_, GitService>,
+) -> Result<Vec<WorktreeInfo>, AppError> {
+    service.list_worktrees(&project_id, &path)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn create_worktree(
+    project_id: String,
+    path: String,
+    name: String,
+    branch: String,
+    service: State<'_, GitService>,
+) -> Result<WorktreeInfo, AppError> {
+    service.create_worktree(&project_id, &path, &name, &branch)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn remove_worktree(
+    project_id: String,
+    path: String,
+    name: String,
+    service: State<'_, GitService>,
+) -> Result<(), AppError> {
+    service.remove_worktree(&project_id, &path, &name)
 }
 
 #[tauri::command]

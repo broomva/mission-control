@@ -1,11 +1,17 @@
 import { create } from "zustand";
-import type { BranchInfo, CommitInfo, FileStatusEntry } from "../bindings";
+import type {
+  BranchInfo,
+  CommitInfo,
+  FileStatusEntry,
+  WorktreeInfo,
+} from "../bindings";
 import { commands, events } from "../bindings";
 
 interface GitState {
   fileStatuses: Record<string, FileStatusEntry[]>;
   commits: CommitInfo[];
   branches: BranchInfo[];
+  worktrees: Record<string, WorktreeInfo[]>;
   loading: boolean;
   watchedProjects: Set<string>;
   unlisteners: Array<() => void>;
@@ -18,6 +24,18 @@ interface GitState {
     limit?: number,
   ) => Promise<void>;
   fetchBranches: (projectId: string, path: string) => Promise<void>;
+  fetchWorktrees: (projectId: string, path: string) => Promise<void>;
+  createWorktree: (
+    projectId: string,
+    path: string,
+    name: string,
+    branch: string,
+  ) => Promise<WorktreeInfo | null>;
+  removeWorktree: (
+    projectId: string,
+    path: string,
+    name: string,
+  ) => Promise<boolean>;
   startWatching: (projectId: string, path: string) => Promise<void>;
   setupEventListeners: (projectId: string, path: string) => Promise<void>;
   cleanup: () => void;
@@ -27,6 +45,7 @@ export const useGitStore = create<GitState>((set, get) => ({
   fileStatuses: {},
   commits: [],
   branches: [],
+  worktrees: {},
   loading: false,
   watchedProjects: new Set(),
   unlisteners: [],
@@ -62,6 +81,47 @@ export const useGitStore = create<GitState>((set, get) => ({
     if (result.status === "ok") {
       set({ branches: result.data });
     }
+  },
+
+  fetchWorktrees: async (projectId: string, path: string) => {
+    const result = await commands.listWorktrees(projectId, path);
+    if (result.status === "ok") {
+      set((state) => ({
+        worktrees: {
+          ...state.worktrees,
+          [projectId]: result.data,
+        },
+      }));
+    }
+  },
+
+  createWorktree: async (
+    projectId: string,
+    path: string,
+    name: string,
+    branch: string,
+  ) => {
+    const result = await commands.createWorktree(projectId, path, name, branch);
+    if (result.status === "ok") {
+      // Refresh the worktree list
+      get().fetchWorktrees(projectId, path);
+      return result.data;
+    }
+    return null;
+  },
+
+  removeWorktree: async (
+    projectId: string,
+    path: string,
+    name: string,
+  ) => {
+    const result = await commands.removeWorktree(projectId, path, name);
+    if (result.status === "ok") {
+      // Refresh the worktree list
+      get().fetchWorktrees(projectId, path);
+      return true;
+    }
+    return false;
   },
 
   startWatching: async (projectId: string, path: string) => {

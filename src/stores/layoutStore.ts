@@ -2,10 +2,10 @@ import { create } from "zustand";
 import { commands } from "../bindings";
 
 interface LayoutState {
-  sidebarTab: "files" | "git" | "agents";
+  sidebarTab: "files" | "git" | "worktrees" | "agents";
   leftPaneVisible: boolean;
   rightPaneVisible: boolean;
-  setSidebarTab: (tab: "files" | "git" | "agents") => void;
+  setSidebarTab: (tab: "files" | "git" | "worktrees" | "agents") => void;
   toggleLeftPane: () => void;
   toggleRightPane: () => void;
   saveLayout: () => Promise<void>;
@@ -19,7 +19,7 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
   leftPaneVisible: true,
   rightPaneVisible: true,
 
-  setSidebarTab: (tab: "files" | "git" | "agents") => {
+  setSidebarTab: (tab: "files" | "git" | "worktrees" | "agents") => {
     set({ sidebarTab: tab });
   },
 

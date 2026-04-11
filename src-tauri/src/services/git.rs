@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use git2::{Oid, Repository, Sort, StatusOptions};
+use git2::{Oid, Repository, Sort, StatusOptions, WorktreeAddOptions, WorktreePruneOptions};
 
 use crate::models::git::{
     BranchInfo, CommitInfo, DiffHunk, DiffInfo, DiffLine, DiffStats, FileDiff, FileStatusEntry,
+    WorktreeInfo,
 };
 use crate::models::AppError;
 
@@ -347,6 +348,162 @@ impl GitService {
         Ok(branches)
     }
 
+    pub fn list_worktrees(
+        &self,
+        project_id: &str,
+        path: &str,
+    ) -> Result<Vec<WorktreeInfo>, AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        let mut worktrees = Vec::new();
+
+        // Add the main worktree
+        let main_path = repo
+            .workdir()
+            .unwrap_or_else(|| repo.path())
+            .to_string_lossy()
+            .to_string();
+
+        // Trim trailing slash for consistency
+        let main_path = main_path.trim_end_matches('/').to_string();
+
+        let main_branch = repo
+            .head()
+            .ok()
+            .and_then(|h| h.shorthand().map(|s| s.to_string()));
+
+        worktrees.push(WorktreeInfo {
+            name: "main".to_string(),
+            path: main_path,
+            branch: main_branch,
+            is_main: true,
+        });
+
+        // List linked worktrees
+        let wt_names = repo.worktrees()?;
+        for i in 0..wt_names.len() {
+            if let Some(name) = wt_names.get(i) {
+                if let Ok(wt) = repo.find_worktree(name) {
+                    let wt_path = wt.path().to_string_lossy().trim_end_matches('/').to_string();
+
+                    // Open the worktree repo to get HEAD branch
+                    let branch = Repository::open(&wt_path)
+                        .ok()
+                        .and_then(|wt_repo| {
+                            wt_repo.head().ok().and_then(|h| {
+                                h.shorthand().map(|s| s.to_string())
+                            })
+                        });
+
+                    worktrees.push(WorktreeInfo {
+                        name: name.to_string(),
+                        path: wt_path,
+                        branch,
+                        is_main: false,
+                    });
+                }
+            }
+        }
+
+        Ok(worktrees)
+    }
+
+    pub fn create_worktree(
+        &self,
+        project_id: &str,
+        path: &str,
+        name: &str,
+        branch: &str,
+    ) -> Result<WorktreeInfo, AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        // Resolve target directory: sibling .worktrees/{name}
+        let work_dir = repo
+            .workdir()
+            .ok_or_else(|| AppError::GitError("Bare repository, no workdir".into()))?;
+        let worktree_base = work_dir.join(".worktrees");
+        std::fs::create_dir_all(&worktree_base).map_err(|e| {
+            AppError::GitError(format!("Failed to create .worktrees dir: {}", e))
+        })?;
+        let wt_path = worktree_base.join(name);
+
+        // Create the branch from HEAD if it doesn't exist
+        let head_commit = repo
+            .head()?
+            .peel_to_commit()
+            .map_err(|e| AppError::GitError(format!("Cannot resolve HEAD: {}", e)))?;
+
+        let branch_ref = match repo.find_branch(branch, git2::BranchType::Local) {
+            Ok(b) => b.into_reference(),
+            Err(_) => {
+                // Create new branch at HEAD
+                repo.branch(branch, &head_commit, false)?
+                    .into_reference()
+            }
+        };
+
+        let mut opts = WorktreeAddOptions::new();
+        opts.reference(Some(&branch_ref));
+
+        let wt = repo
+            .worktree(name, &wt_path, Some(&opts))
+            .map_err(|e| AppError::GitError(format!("Failed to create worktree: {}", e)))?;
+
+        let wt_path_str = wt.path().to_string_lossy().trim_end_matches('/').to_string();
+
+        Ok(WorktreeInfo {
+            name: name.to_string(),
+            path: wt_path_str,
+            branch: Some(branch.to_string()),
+            is_main: false,
+        })
+    }
+
+    pub fn remove_worktree(
+        &self,
+        project_id: &str,
+        path: &str,
+        name: &str,
+    ) -> Result<(), AppError> {
+        self.open_or_get_repo(project_id, path)?;
+        let repos = self.repos.lock().unwrap();
+        let repo = repos
+            .get(project_id)
+            .ok_or_else(|| AppError::GitError("Repository not found in cache".into()))?;
+
+        let wt = repo
+            .find_worktree(name)
+            .map_err(|e| AppError::GitError(format!("Worktree '{}' not found: {}", name, e)))?;
+
+        // Remove the working directory on disk
+        let wt_path = wt.path().to_path_buf();
+        if wt_path.exists() {
+            std::fs::remove_dir_all(&wt_path).map_err(|e| {
+                AppError::GitError(format!(
+                    "Failed to remove worktree directory {}: {}",
+                    wt_path.display(),
+                    e
+                ))
+            })?;
+        }
+
+        // Prune the worktree metadata
+        let mut prune_opts = WorktreePruneOptions::new();
+        prune_opts.valid(true).working_tree(true);
+        wt.prune(Some(&mut prune_opts))
+            .map_err(|e| AppError::GitError(format!("Failed to prune worktree: {}", e)))?;
+
+        Ok(())
+    }
+
     #[allow(dead_code)]
     pub fn refresh_repo(&self, project_id: &str, path: &str) -> Result<(), AppError> {
         let mut repos = self.repos.lock().unwrap();
@@ -498,5 +655,80 @@ mod tests {
         assert!(main_branch.is_some());
         let feature = branches.iter().find(|b| b.name == "feature");
         assert!(feature.is_some());
+    }
+
+    #[test]
+    fn test_list_worktrees_main_only() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let worktrees = service
+            .list_worktrees("test", tmp.path().to_str().unwrap())
+            .unwrap();
+
+        assert_eq!(worktrees.len(), 1);
+        assert!(worktrees[0].is_main);
+        assert_eq!(worktrees[0].name, "main");
+        assert!(worktrees[0].branch.is_some());
+    }
+
+    #[test]
+    fn test_create_and_list_worktree() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let path_str = tmp.path().to_str().unwrap();
+
+        // Create a worktree
+        let wt = service
+            .create_worktree("test", path_str, "my-wt", "feature/wt")
+            .unwrap();
+        assert_eq!(wt.name, "my-wt");
+        assert_eq!(wt.branch, Some("feature/wt".to_string()));
+        assert!(!wt.is_main);
+
+        // List should show 2 worktrees
+        // Need a fresh service to avoid stale cached repo
+        let service2 = GitService::new();
+        let worktrees = service2
+            .list_worktrees("test2", path_str)
+            .unwrap();
+        assert_eq!(worktrees.len(), 2);
+
+        let linked = worktrees.iter().find(|w| w.name == "my-wt");
+        assert!(linked.is_some());
+        assert!(!linked.unwrap().is_main);
+    }
+
+    #[test]
+    fn test_create_and_remove_worktree() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = init_test_repo(tmp.path());
+        create_commit(&repo, tmp.path(), "file.txt", "hello", "initial");
+
+        let service = GitService::new();
+        let path_str = tmp.path().to_str().unwrap();
+
+        // Create
+        service
+            .create_worktree("test", path_str, "to-remove", "feature/remove")
+            .unwrap();
+
+        // Remove
+        service
+            .remove_worktree("test", path_str, "to-remove")
+            .unwrap();
+
+        // List should show only main
+        let service2 = GitService::new();
+        let worktrees = service2
+            .list_worktrees("test2", path_str)
+            .unwrap();
+        assert_eq!(worktrees.len(), 1);
+        assert!(worktrees[0].is_main);
     }
 }
