@@ -94,15 +94,17 @@ impl AgentService {
         let mut cmd = match agent_type.as_str() {
             "claude-code" => {
                 let mut c = CommandBuilder::new("claude");
-                if let Some(ref p) = prompt {
-                    // Non-interactive mode: use stream-json for structured output
-                    c.arg("--output-format");
-                    c.arg("stream-json");
-                    c.arg("-p");
-                    c.arg(p);
+                // Always start in interactive mode when hooks are active.
+                // The prompt (if any) will be sent via PTY input after startup.
+                // Only use -p mode when hooks are NOT active (headless/batch).
+                if !hooks_active {
+                    if let Some(ref p) = prompt {
+                        c.arg("--output-format");
+                        c.arg("stream-json");
+                        c.arg("-p");
+                        c.arg(p);
+                    }
                 }
-                // Interactive mode (no prompt): don't pass --output-format
-                // since it's ignored in TTY interactive mode
                 c
             }
             "codex" => {
@@ -194,7 +196,7 @@ impl AgentService {
         // Spawn dual-output reader thread
         Self::spawn_agent_reader(
             reader,
-            id,
+            id.clone(),
             project_id,
             agent_type,
             app_handle,
@@ -202,6 +204,27 @@ impl AgentService {
             Arc::clone(&self.timeline),
             use_hooks,
         );
+
+        // If hooks are active and a prompt was provided, send it via PTY
+        // after a brief delay to let the agent start up.
+        if use_hooks {
+            if let Some(ref p) = prompt {
+                let prompt_text = p.clone();
+                let agents_ref = Arc::clone(&self.agents);
+                let agent_id_clone = id.clone();
+                std::thread::spawn(move || {
+                    // Wait for Claude Code to initialize and show its prompt
+                    std::thread::sleep(std::time::Duration::from_secs(3));
+                    if let Some(session) = agents_ref.lock().unwrap().get_mut(&agent_id_clone)
+                    {
+                        use std::io::Write;
+                        let _ = session.writer.write_all(prompt_text.as_bytes());
+                        let _ = session.writer.write_all(b"\n");
+                        let _ = session.writer.flush();
+                    }
+                });
+            }
+        }
 
         Ok(info)
     }
