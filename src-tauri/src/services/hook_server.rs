@@ -24,8 +24,7 @@ pub struct HookServerState {
     pub agents: Arc<Mutex<HashMap<String, HookAgentContext>>>,
     #[allow(dead_code)]
     session_map: Arc<Mutex<HashMap<String, String>>>,
-    #[allow(dead_code)]
-    app_handle: AppHandle,
+    pub app_handle: AppHandle,
     #[allow(dead_code)]
     timeline: Arc<Mutex<Vec<AgentEvent>>>,
 }

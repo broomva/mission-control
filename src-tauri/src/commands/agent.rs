@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tauri::{AppHandle, State};
 
 use crate::models::{AgentEvent, AgentInfo, AppError};
@@ -12,9 +14,9 @@ pub fn spawn_agent(
     agent_type: String,
     prompt: Option<String>,
     cwd: String,
-    service: State<'_, AgentService>,
-    hook_state: State<'_, HookServerState>,
-    gateway: State<'_, AuthGateway>,
+    service: State<'_, Arc<AgentService>>,
+    hook_state: State<'_, Arc<HookServerState>>,
+    gateway: State<'_, Arc<AuthGateway>>,
     app_handle: AppHandle,
 ) -> Result<AgentInfo, AppError> {
     let proxy_url = gateway.proxy_url();
@@ -42,8 +44,8 @@ pub fn spawn_agent(
 #[specta::specta]
 pub fn stop_agent(
     agent_id: String,
-    service: State<'_, AgentService>,
-    gateway: State<'_, AuthGateway>,
+    service: State<'_, Arc<AgentService>>,
+    gateway: State<'_, Arc<AuthGateway>>,
 ) -> Result<(), AppError> {
     // Revoke the gateway session on stop
     gateway.revoke_session(&agent_id);
@@ -54,9 +56,9 @@ pub fn stop_agent(
 #[specta::specta]
 pub fn resume_agent(
     agent_id: String,
-    service: State<'_, AgentService>,
-    hook_state: State<'_, HookServerState>,
-    gateway: State<'_, AuthGateway>,
+    service: State<'_, Arc<AgentService>>,
+    hook_state: State<'_, Arc<HookServerState>>,
+    gateway: State<'_, Arc<AuthGateway>>,
     app_handle: AppHandle,
 ) -> Result<AgentInfo, AppError> {
     let proxy_url = gateway.proxy_url();
@@ -82,7 +84,7 @@ pub fn resume_agent(
 pub fn write_agent(
     agent_id: String,
     data: Vec<u8>,
-    service: State<'_, AgentService>,
+    service: State<'_, Arc<AgentService>>,
 ) -> Result<(), AppError> {
     service.write(&agent_id, &data)
 }
@@ -93,7 +95,7 @@ pub fn resize_agent(
     agent_id: String,
     cols: u16,
     rows: u16,
-    service: State<'_, AgentService>,
+    service: State<'_, Arc<AgentService>>,
 ) -> Result<(), AppError> {
     service.resize(&agent_id, cols, rows)
 }
@@ -102,7 +104,7 @@ pub fn resize_agent(
 #[specta::specta]
 pub fn list_agents(
     project_id: Option<String>,
-    service: State<'_, AgentService>,
+    service: State<'_, Arc<AgentService>>,
 ) -> Result<Vec<AgentInfo>, AppError> {
     match project_id {
         Some(pid) => Ok(service.list_project(&pid)),
@@ -114,7 +116,7 @@ pub fn list_agents(
 #[specta::specta]
 pub fn get_agent(
     agent_id: String,
-    service: State<'_, AgentService>,
+    service: State<'_, Arc<AgentService>>,
 ) -> Result<AgentInfo, AppError> {
     service.get(&agent_id)
 }
@@ -125,7 +127,7 @@ pub fn get_timeline(
     project_id: String,
     offset: usize,
     limit: usize,
-    service: State<'_, AgentService>,
+    service: State<'_, Arc<AgentService>>,
 ) -> Result<Vec<AgentEvent>, AppError> {
     Ok(service.get_timeline(&project_id, offset, limit))
 }

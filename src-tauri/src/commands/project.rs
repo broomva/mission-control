@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tauri::State;
 
 use crate::models::{AppError, Project};
@@ -5,7 +7,7 @@ use crate::services::ProjectService;
 
 #[tauri::command]
 #[specta::specta]
-pub fn list_projects(service: State<'_, ProjectService>) -> Result<Vec<Project>, AppError> {
+pub fn list_projects(service: State<'_, Arc<ProjectService>>) -> Result<Vec<Project>, AppError> {
     Ok(service.list())
 }
 
@@ -14,7 +16,7 @@ pub fn list_projects(service: State<'_, ProjectService>) -> Result<Vec<Project>,
 pub fn add_project(
     name: String,
     path: String,
-    service: State<'_, ProjectService>,
+    service: State<'_, Arc<ProjectService>>,
 ) -> Result<Project, AppError> {
     service.add(name, path)
 }
@@ -23,13 +25,13 @@ pub fn add_project(
 #[specta::specta]
 pub fn remove_project(
     id: String,
-    service: State<'_, ProjectService>,
+    service: State<'_, Arc<ProjectService>>,
 ) -> Result<Project, AppError> {
     service.remove(&id)
 }
 
 #[tauri::command]
 #[specta::specta]
-pub fn get_project(id: String, service: State<'_, ProjectService>) -> Result<Project, AppError> {
+pub fn get_project(id: String, service: State<'_, Arc<ProjectService>>) -> Result<Project, AppError> {
     service.get(&id)
 }

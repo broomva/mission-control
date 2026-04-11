@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod api_server;
 pub mod auth_gateway;
 pub mod credential_store;
 pub mod database;

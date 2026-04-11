@@ -42,7 +42,7 @@ pub fn remove_credential(
 #[tauri::command]
 #[specta::specta]
 pub fn get_gateway_status(
-    gateway: State<'_, AuthGateway>,
+    gateway: State<'_, Arc<AuthGateway>>,
 ) -> Result<GatewayStatus, AppError> {
     Ok(gateway.status())
 }

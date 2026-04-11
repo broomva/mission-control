@@ -5,8 +5,8 @@ mod services;
 use std::sync::{Arc, Mutex};
 
 use services::{
-    auth_gateway, hook_server, AgentService, AuthGateway, CredentialStore, FsWatcherService,
-    GitService, PersistenceService, ProjectService, TerminalService,
+    api_server, auth_gateway, hook_server, AgentService, AuthGateway, CredentialStore,
+    FsWatcherService, GitService, PersistenceService, ProjectService, TerminalService,
 };
 use tauri::Manager;
 use tauri_specta::{collect_commands, collect_events, Builder};
@@ -106,16 +106,16 @@ pub fn run() {
     let db_pool = persistence.db_pool().clone();
 
     // ProjectService gets its own persistence instance (same DB file, separate pool)
-    let project_service = ProjectService::new(PersistenceService::new());
+    let project_service = Arc::new(ProjectService::new(PersistenceService::new()));
     let terminal_service = TerminalService::new(Arc::clone(&persistence));
-    let git_service = GitService::new();
+    let git_service = Arc::new(GitService::new());
     // Separate GitService instance for the hook server's auto-checkpoint feature
     let git_service_for_hooks = Arc::new(GitService::new());
     let fs_watcher_service = FsWatcherService::new();
 
     // Shared timeline between AgentService and HookServer
     let shared_timeline = Arc::new(Mutex::new(Vec::new()));
-    let agent_service = AgentService::new(Arc::clone(&shared_timeline));
+    let agent_service = Arc::new(AgentService::new(Arc::clone(&shared_timeline)));
 
     // Credential store — lives in a separate file from the main DB
     let cred_path = dirs::home_dir()
@@ -123,6 +123,12 @@ pub fn run() {
         .join(".mission-control")
         .join("credentials.bin");
     let credential_store = Arc::new(CredentialStore::new(cred_path));
+
+    // Arc clones for the API server (created inside setup after hook_state & gateway exist)
+    let api_project_service = Arc::clone(&project_service);
+    let api_agent_service = Arc::clone(&agent_service);
+    let api_git_service = Arc::clone(&git_service);
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
@@ -147,6 +153,26 @@ pub fn run() {
                 .expect("failed to start auth gateway")
             });
 
+            // Wrap hook_state and gateway in Arc for API server sharing
+            let hook_state = Arc::new(hook_state);
+            let gateway = Arc::new(gateway);
+
+            // Start the REST API server on port 19420 (configurable via MC_API_PORT)
+            let api_hook_state = Arc::clone(&hook_state);
+            let api_gateway = Arc::clone(&gateway);
+            tauri::async_runtime::block_on(async {
+                api_server::start_api_server(
+                    api_project_service,
+                    api_agent_service,
+                    api_git_service,
+                    api_hook_state,
+                    api_gateway,
+                )
+                .await
+                .expect("failed to start API server")
+            });
+
+            // Manage Arc-wrapped types (shared with API server)
             app.manage(hook_state);
             app.manage(gateway);
             app.manage(credential_store);
