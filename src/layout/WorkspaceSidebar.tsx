@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { AddProjectDialog } from "../components/AddProjectDialog";
 import { AgentCard } from "../components/AgentCard";
@@ -10,7 +11,11 @@ import { useGitStore } from "../stores/gitStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { useProjectStore } from "../stores/projectStore";
 
-export function WorkspaceSidebar() {
+interface WorkspaceSidebarProps {
+  style?: CSSProperties;
+}
+
+export function WorkspaceSidebar({ style }: WorkspaceSidebarProps) {
   const { projects, activeProjectId, setActiveProject } = useProjectStore();
   const { sidebarTab, setSidebarTab } = useLayoutStore();
   const { fileStatuses, fetchStatus, startWatching, setupEventListeners } =
@@ -77,7 +82,7 @@ export function WorkspaceSidebar() {
 
   return (
     <>
-      <aside className="workspace-sidebar">
+      <aside className="workspace-sidebar" style={style}>
         {/* History section */}
         <div className="sidebar-history">
           <div className="sidebar-history-label">

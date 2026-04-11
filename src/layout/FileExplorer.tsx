@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { CheckpointList } from "../components/CheckpointList";
 import { FileTreeView } from "../components/FileTreeView";
@@ -9,7 +10,11 @@ import { useProjectStore } from "../stores/projectStore";
 type ExplorerTab = "changes" | "files" | "checks";
 type BottomPanelTab = "setup" | "run" | "terminal";
 
-export function FileExplorer() {
+interface FileExplorerProps {
+  style?: CSSProperties;
+}
+
+export function FileExplorer({ style }: FileExplorerProps) {
   const { rightPaneVisible, toggleRightPane } = useLayoutStore();
   const { projects, activeProjectId } = useProjectStore();
   const { fileStatuses, branches, fetchBranches } = useGitStore();
@@ -32,7 +37,7 @@ export function FileExplorer() {
   const currentBranch = branches.find((b) => b.is_head);
 
   return (
-    <aside className="file-explorer">
+    <aside className="file-explorer" style={style}>
       <div className="file-explorer-header">
         <span className="file-explorer-title">Explorer</span>
         <button

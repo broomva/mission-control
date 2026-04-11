@@ -18,6 +18,8 @@ describe("layoutStore", () => {
       sidebarTab: "files",
       leftPaneVisible: true,
       rightPaneVisible: true,
+      sidebarWidth: 260,
+      fileExplorerWidth: 280,
     });
     vi.clearAllMocks();
   });
@@ -73,6 +75,46 @@ describe("layoutStore", () => {
       useLayoutStore.getState().toggleRightPane();
       useLayoutStore.getState().toggleRightPane();
       expect(useLayoutStore.getState().rightPaneVisible).toBe(true);
+    });
+  });
+
+  describe("resizable widths", () => {
+    it("sidebarWidth defaults to 260", () => {
+      expect(useLayoutStore.getState().sidebarWidth).toBe(260);
+    });
+
+    it("fileExplorerWidth defaults to 280", () => {
+      expect(useLayoutStore.getState().fileExplorerWidth).toBe(280);
+    });
+
+    it("setSidebarWidth updates width", () => {
+      useLayoutStore.getState().setSidebarWidth(300);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(300);
+    });
+
+    it("setSidebarWidth clamps to min 180", () => {
+      useLayoutStore.getState().setSidebarWidth(100);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(180);
+    });
+
+    it("setSidebarWidth clamps to max 400", () => {
+      useLayoutStore.getState().setSidebarWidth(500);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(400);
+    });
+
+    it("setFileExplorerWidth updates width", () => {
+      useLayoutStore.getState().setFileExplorerWidth(350);
+      expect(useLayoutStore.getState().fileExplorerWidth).toBe(350);
+    });
+
+    it("setFileExplorerWidth clamps to min 200", () => {
+      useLayoutStore.getState().setFileExplorerWidth(100);
+      expect(useLayoutStore.getState().fileExplorerWidth).toBe(200);
+    });
+
+    it("setFileExplorerWidth clamps to max 450", () => {
+      useLayoutStore.getState().setFileExplorerWidth(600);
+      expect(useLayoutStore.getState().fileExplorerWidth).toBe(450);
     });
   });
 

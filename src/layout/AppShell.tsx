@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { CredentialSettings } from "../components/CredentialSettings";
+import { ResizableSplitter } from "../components/ResizableSplitter";
 import { StatusBar } from "../components/StatusBar";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useAgentStore } from "../stores/agentStore";
 import { useGitStore } from "../stores/gitStore";
+import { useLayoutStore } from "../stores/layoutStore";
 import { useProjectStore } from "../stores/projectStore";
 import { CenterPane } from "./CenterPane";
 import { FileExplorer } from "./FileExplorer";
@@ -13,6 +15,15 @@ export function AppShell() {
   const { fetchProjects, projects, activeProjectId } = useProjectStore();
   const { branches } = useGitStore();
   const { stopAgent } = useAgentStore();
+  const {
+    sidebarWidth,
+    fileExplorerWidth,
+    leftPaneVisible,
+    rightPaneVisible,
+    setSidebarWidth,
+    setFileExplorerWidth,
+    saveLayout,
+  } = useLayoutStore();
   const [showSpawnDialog, setShowSpawnDialog] = useState(false);
   const [showCredentialSettings, setShowCredentialSettings] = useState(false);
 
@@ -35,6 +46,23 @@ export function AppShell() {
     onSpawnAgent: handleSpawnAgent,
     onCloseAgent: handleCloseAgent,
   });
+
+  const handleSidebarResize = useCallback(
+    (delta: number) => {
+      setSidebarWidth(sidebarWidth + delta);
+      saveLayout();
+    },
+    [sidebarWidth, setSidebarWidth, saveLayout],
+  );
+
+  const handleExplorerResize = useCallback(
+    (delta: number) => {
+      // Negative delta = moving left = wider explorer
+      setFileExplorerWidth(fileExplorerWidth - delta);
+      saveLayout();
+    },
+    [fileExplorerWidth, setFileExplorerWidth, saveLayout],
+  );
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const currentBranch = branches.find((b) => b.is_head);
@@ -67,13 +95,19 @@ export function AppShell() {
         </div>
       </header>
       <div className="app-body">
-        <WorkspaceSidebar />
+        <WorkspaceSidebar style={{ width: sidebarWidth }} />
+        {leftPaneVisible && (
+          <ResizableSplitter position="left" onResize={handleSidebarResize} />
+        )}
         <CenterPane
           showSpawnDialog={showSpawnDialog}
           onOpenSpawnDialog={handleSpawnAgent}
           onCloseSpawnDialog={() => setShowSpawnDialog(false)}
         />
-        <FileExplorer />
+        {rightPaneVisible && (
+          <ResizableSplitter position="right" onResize={handleExplorerResize} />
+        )}
+        <FileExplorer style={{ width: fileExplorerWidth }} />
       </div>
       <StatusBar />
       {showCredentialSettings && (
