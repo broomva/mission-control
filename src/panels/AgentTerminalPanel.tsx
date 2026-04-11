@@ -3,7 +3,8 @@ import { WebglAddon } from "@xterm/addon-webgl";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type AgentEvent, commands, events } from "../bindings";
+import { commands, events } from "../bindings";
+import { useAgentStore } from "../stores/agentStore";
 
 const EVENT_ICONS: Record<string, string> = {
   tool_use: "T",
@@ -35,8 +36,11 @@ export function AgentTerminalPanel({ agentId }: { agentId: string }) {
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const [timelineEvents, setTimelineEvents] = useState<AgentEvent[]>([]);
   const [autoScroll, setAutoScroll] = useState(true);
+
+  // Use global timeline from store (persists across tab switches)
+  const globalTimeline = useAgentStore((s) => s.timeline);
+  const timelineEvents = globalTimeline.filter((e) => e.agent_id === agentId);
 
   const handleResize = useCallback(() => {
     const fitAddon = fitAddonRef.current;
@@ -133,12 +137,10 @@ export function AgentTerminalPanel({ agentId }: { agentId: string }) {
     });
 
     // Status events -> timeline sidebar
+    // Timeline events are handled by the global agentStore listener
+    // (set up in CenterPane). We just need to auto-scroll when new events arrive.
     const unlistenStatus = events.agentStatusEvent.listen((event) => {
       if (event.payload.agent_id === agentId && event.payload.event) {
-        setTimelineEvents((prev) => [
-          ...prev,
-          event.payload.event as AgentEvent,
-        ]);
         requestAnimationFrame(scrollTimeline);
       }
     });
