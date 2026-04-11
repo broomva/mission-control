@@ -34,6 +34,11 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
   const { maximizeTile, restoreGrid, setFocusedTile } = useTileLayoutStore();
   const { stopAgent } = useAgentStore();
 
+  const handleCloseAgent = (id: string) => {
+    useTileLayoutStore.getState().removeFromSplit(id);
+    stopAgent(id);
+  };
+
   const visibleAgents = useMemo(
     () => agents.filter((a) => !minimizedTileIds.includes(a.id)),
     [agents, minimizedTileIds],
@@ -74,7 +79,7 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
             agent={maximizedAgent}
             onClose={(id) => {
               restoreGrid();
-              stopAgent(id);
+              handleCloseAgent(id);
             }}
             onMaximize={() => restoreGrid()}
           />
@@ -106,6 +111,18 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
               className={`tile-grid-tab-dot status-${a.status === "running" ? "running" : a.status === "waiting" ? "waiting" : a.status === "error" ? "error" : "idle"}`}
             />
             {AGENT_LABELS[a.agent_type] ?? a.agent_type}
+            <span
+              className="tile-grid-tab-close"
+              role="button"
+              tabIndex={-1}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseAgent(a.id);
+              }}
+              onKeyDown={() => {}}
+            >
+              ×
+            </span>
           </button>
         ))}
         <button
@@ -123,10 +140,7 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
         <SplitContainer
           layout={splitLayout}
           agents={visibleAgents}
-          onClose={(id) => {
-            useTileLayoutStore.getState().removeFromSplit(id);
-            stopAgent(id);
-          }}
+          onClose={handleCloseAgent}
           onMaximize={(id) => maximizeTile(id)}
         />
       )}
@@ -138,7 +152,7 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
             <div key={agent.id} className="tile-grid-cell">
               <AgentTile
                 agent={agent}
-                onClose={(id) => stopAgent(id)}
+                onClose={handleCloseAgent}
                 onMaximize={(id) => maximizeTile(id)}
               />
             </div>
