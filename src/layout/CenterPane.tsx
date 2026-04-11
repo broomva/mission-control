@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
-import { ChatView } from "../components/ChatView";
+import { useEffect } from "react";
 import { SpawnAgentDialog } from "../components/SpawnAgentDialog";
 import { TileGrid } from "../components/TileGrid";
 import { WorkspaceWelcome } from "../components/WorkspaceWelcome";
 import { useReviewEventListener } from "../hooks/useReviewEventListener";
-import { AgentTerminalPanel } from "../panels/AgentTerminalPanel";
 import { ProjectDashboard } from "../panels/ProjectDashboard";
 import { useAgentStore } from "../stores/agentStore";
 import { useProjectStore } from "../stores/projectStore";
+import { useTileLayoutStore } from "../stores/tileLayoutStore";
 
 interface CenterPaneProps {
   showSpawnDialog: boolean;
@@ -15,35 +14,15 @@ interface CenterPaneProps {
   onCloseSpawnDialog: () => void;
 }
 
-const AGENT_TYPE_LABELS: Record<string, string> = {
-  "claude-code": "Claude Code",
-  codex: "Codex",
-  gemini: "Gemini CLI",
-  custom: "Custom",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  running: "var(--agent-running)",
-  starting: "var(--agent-running)",
-  waiting: "var(--agent-waiting)",
-  idle: "var(--agent-idle)",
-  completed: "var(--agent-completed)",
-  stopped: "var(--agent-idle)",
-  error: "var(--agent-error)",
-};
-
-type ViewMode = "chat" | "terminal" | "split";
-
 export function CenterPane({
   showSpawnDialog,
   onOpenSpawnDialog,
   onCloseSpawnDialog,
 }: CenterPaneProps) {
   const { activeProjectId } = useProjectStore();
-  const { agents, fetchAgents, setupEventListeners, timeline, fetchTimeline } =
-    useAgentStore();
-  const [activeAgentId, setActiveAgentId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("terminal");
+  const { agents, fetchAgents, setupEventListeners } = useAgentStore();
+  const { splitLayout } = useTileLayoutStore();
+  const { addToSplit } = useTileLayoutStore();
 
   // Wire agent file_write events to review queue
   useReviewEventListener();
@@ -58,46 +37,38 @@ export function CenterPane({
   // Set up global agent event listeners
   useEffect(() => {
     let cleanup: (() => void) | null = null;
-
     setupEventListeners().then((unsub) => {
       cleanup = unsub;
     });
-
     return () => {
       cleanup?.();
     };
   }, [setupEventListeners]);
 
+  // Auto-add new agents to split layout
+  useEffect(() => {
+    if (!activeProjectId) return;
+    const projectAgents = agents.filter(
+      (a) => a.project_id === activeProjectId,
+    );
+    for (const agent of projectAgents) {
+      // Check if agent is already in the split layout
+      if (splitLayout) {
+        const existingIds = collectIds(splitLayout);
+        if (!existingIds.includes(agent.id)) {
+          addToSplit(agent.id);
+        }
+      } else if (projectAgents.length > 0) {
+        // First agent — initialize the split layout
+        addToSplit(agent.id);
+      }
+    }
+  }, [agents, activeProjectId, splitLayout, addToSplit]);
+
   // Filter agents by active project
   const projectAgents = activeProjectId
     ? agents.filter((a) => a.project_id === activeProjectId)
     : [];
-
-  // Auto-select first agent or keep selection valid
-  useEffect(() => {
-    if (projectAgents.length > 0) {
-      const first = projectAgents[0];
-      if (
-        first &&
-        (!activeAgentId || !projectAgents.find((a) => a.id === activeAgentId))
-      ) {
-        setActiveAgentId(first.id);
-      }
-    } else {
-      setActiveAgentId(null);
-    }
-  }, [projectAgents, activeAgentId]);
-
-  // Fetch timeline for active agent
-  useEffect(() => {
-    if (activeProjectId && activeAgentId) {
-      fetchTimeline(activeProjectId);
-    }
-  }, [activeProjectId, activeAgentId, fetchTimeline]);
-
-  const activeAgent = activeAgentId
-    ? projectAgents.find((a) => a.id === activeAgentId)
-    : null;
 
   // If no project selected, show dashboard
   if (!activeProjectId) {
@@ -109,117 +80,29 @@ export function CenterPane({
     );
   }
 
-  // If split view mode, show the tile grid
-  if (viewMode === "split") {
+  // If project selected but no agents, show welcome
+  if (projectAgents.length === 0) {
     return (
       <div className="center-pane">
-        <div className="agent-tab-bar">
-          <div className="view-mode-toggle">
-            <button
-              type="button"
-              className="view-mode-btn"
-              onClick={() => setViewMode("chat")}
-            >
-              Chat
-            </button>
-            <button
-              type="button"
-              className="view-mode-btn"
-              onClick={() => setViewMode("terminal")}
-            >
-              Terminal
-            </button>
-            <button
-              type="button"
-              className="view-mode-btn view-mode-btn-active"
-              onClick={() => setViewMode("split")}
-            >
-              Split
-            </button>
-          </div>
-        </div>
-        <TileGrid agents={projectAgents} onSpawnAgent={onOpenSpawnDialog} />
+        <WorkspaceWelcome onSpawnAgent={onOpenSpawnDialog} />
         {showSpawnDialog && <SpawnAgentDialog onClose={onCloseSpawnDialog} />}
       </div>
     );
   }
 
-  // Default: tabbed view with chat or terminal
+  // Agents exist — show the draggable tile layout
   return (
     <div className="center-pane">
-      {/* Agent Tab Bar */}
-      <div className="agent-tab-bar">
-        {projectAgents.map((agent) => {
-          const label = AGENT_TYPE_LABELS[agent.agent_type] ?? agent.agent_type;
-          const isActive = agent.id === activeAgentId;
-          const statusColor =
-            STATUS_COLORS[agent.status] ?? "var(--agent-idle)";
-
-          return (
-            <button
-              key={agent.id}
-              type="button"
-              className={`agent-tab ${isActive ? "agent-tab-active" : ""}`}
-              onClick={() => setActiveAgentId(agent.id)}
-              title={`${label} - ${agent.status}`}
-            >
-              <span
-                className="agent-tab-dot"
-                style={{ background: statusColor }}
-              />
-              {label}
-            </button>
-          );
-        })}
-        <button
-          type="button"
-          className="agent-tab-add"
-          onClick={onOpenSpawnDialog}
-          title="Spawn new agent"
-        >
-          +
-        </button>
-
-        {/* View mode toggle */}
-        <div className="view-mode-toggle">
-          <button
-            type="button"
-            className={`view-mode-btn ${viewMode === "chat" ? "view-mode-btn-active" : ""}`}
-            onClick={() => setViewMode("chat")}
-          >
-            Chat
-          </button>
-          <button
-            type="button"
-            className={`view-mode-btn ${viewMode === "terminal" ? "view-mode-btn-active" : ""}`}
-            onClick={() => setViewMode("terminal")}
-          >
-            Terminal
-          </button>
-          <button
-            type="button"
-            className="view-mode-btn"
-            onClick={() => setViewMode("split")}
-          >
-            Split
-          </button>
-        </div>
-      </div>
-
-      {/* Content area */}
-      {activeAgent ? (
-        viewMode === "chat" ? (
-          <ChatView agent={activeAgent} timeline={timeline} />
-        ) : (
-          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-            <AgentTerminalPanel agentId={activeAgent.id} />
-          </div>
-        )
-      ) : (
-        <WorkspaceWelcome onSpawnAgent={onOpenSpawnDialog} />
-      )}
-
+      <TileGrid agents={projectAgents} onSpawnAgent={onOpenSpawnDialog} />
       {showSpawnDialog && <SpawnAgentDialog onClose={onCloseSpawnDialog} />}
     </div>
   );
+}
+
+/** Collect all agent IDs from a layout tree */
+function collectIds(
+  node: import("../stores/tileLayoutStore").LayoutNode,
+): string[] {
+  if (node.type === "leaf") return [node.agentId];
+  return [...collectIds(node.first), ...collectIds(node.second)];
 }

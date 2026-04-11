@@ -386,38 +386,6 @@
   gap: var(--space-4);
 }
 
-/* --- View Mode Toggle --- */
-.view-mode-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-left: auto;
-  padding: 0 var(--space-3);
-}
-
-.view-mode-btn {
-  padding: var(--space-1) var(--space-3);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  font-family: inherit;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.view-mode-btn:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-secondary);
-}
-
-.view-mode-btn-active {
-  background: var(--bg-surface);
-  border-color: var(--border-default);
-  color: var(--text-primary);
-}
-
 /* --- File Explorer (Right Pane) --- */
 .file-explorer,
 .review-pane {
