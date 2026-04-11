@@ -45,10 +45,15 @@ pub fn spawn_agent(
 pub fn stop_agent(
     agent_id: String,
     service: State<'_, Arc<AgentService>>,
+    hook_state: State<'_, Arc<HookServerState>>,
     gateway: State<'_, Arc<AuthGateway>>,
 ) -> Result<(), AppError> {
     // Revoke the gateway session on stop
     gateway.revoke_session(&agent_id);
+    // Unregister from hook server so stale events are rejected
+    if let Ok(mut agents_map) = hook_state.agents.lock() {
+        agents_map.remove(&agent_id);
+    }
     service.stop(&agent_id)
 }
 

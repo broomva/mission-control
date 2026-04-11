@@ -127,24 +127,27 @@ fn resolve_agent_id(
     session_map: &Mutex<HashMap<String, String>>,
     registered_agents: &Mutex<HashMap<String, HookAgentContext>>,
 ) -> Option<String> {
-    // Primary: query parameter
+    // Primary: query parameter — MUST be a registered MC agent
     if let Some(id) = query_agent_id {
         if !id.is_empty() {
-            // Only accept if this agent_id is registered with Mission Control
             if let Ok(agents) = registered_agents.lock() {
                 if agents.contains_key(id) {
                     return Some(id.clone());
                 }
             }
-            // Unknown agent_id — likely from an external Claude session
             return None;
         }
     }
-    // Fallback: session_id -> agent_id map
+    // Fallback: session_id → agent_id map — also verify agent is registered
     if let Some(sid) = session_id {
         if let Ok(map) = session_map.lock() {
             if let Some(aid) = map.get(sid) {
-                return Some(aid.clone());
+                // Double-check the agent is still registered
+                if let Ok(agents) = registered_agents.lock() {
+                    if agents.contains_key(aid) {
+                        return Some(aid.clone());
+                    }
+                }
             }
         }
     }
