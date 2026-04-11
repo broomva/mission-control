@@ -87,36 +87,116 @@
 /* --- Project Card --- */
 .project-card {
   background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: var(--space-5);
-  transition:
-    border-color var(--transition-fast),
-    background var(--transition-normal);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: background 150ms ease, transform 80ms ease;
+  position: relative;
+  opacity: 0;
+  animation: fadeIn 300ms ease forwards;
 }
 
 .project-card:hover {
-  border-color: var(--border-hover);
   background: var(--bg-surface-hover);
+  transform: translateY(-1px);
 }
 
-.project-card-header h3 {
-  font-size: var(--text-md);
+.project-card:active {
+  transform: scale(0.99);
+}
+
+.project-card-active {
+  border-left: 2px solid var(--accent-primary);
+  padding-left: 14px; /* compensate for border */
+}
+
+.project-card-name {
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: var(--space-2);
+  color: var(--text-primary);
+  margin-bottom: 4px;
 }
 
-.project-path {
-  font-size: var(--text-sm);
+.project-card-path {
+  font-size: 11px;
   font-family: var(--font-mono);
   color: var(--text-tertiary);
-  word-break: break-all;
-  margin-bottom: var(--space-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 12px;
 }
 
-.project-card-actions {
+.project-card-meta {
   display: flex;
-  gap: var(--space-3);
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.project-card-branch {
+  font-family: var(--font-mono);
+  color: var(--accent-primary);
+}
+
+.project-card-info {
+  color: var(--text-tertiary);
+}
+
+.project-card-menu {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.project-card:hover .project-card-menu {
+  opacity: 1;
+}
+
+.project-card-menu:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.project-card-context-menu {
+  position: absolute;
+  top: 36px;
+  right: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-dialog);
+  z-index: var(--z-overlay);
+  min-width: 120px;
+  padding: var(--space-1) 0;
+}
+
+.project-card-context-menu button {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.project-card-context-menu button:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
 }
 
 /* --- Dialog --- */

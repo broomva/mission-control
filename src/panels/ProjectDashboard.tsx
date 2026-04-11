@@ -2,20 +2,15 @@ import { useEffect, useState } from "react";
 import { AddProjectDialog } from "../components/AddProjectDialog";
 import { ProjectCard } from "../components/ProjectCard";
 import { useProjectStore } from "../stores/projectStore";
-import { useTerminalStore } from "../stores/terminalStore";
 
 export function ProjectDashboard() {
-  const { projects, fetchProjects } = useProjectStore();
-  const { createTerminal } = useTerminalStore();
+  const { projects, activeProjectId, fetchProjects, setActiveProject, removeProject } =
+    useProjectStore();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
-
-  const handleOpenTerminal = async (_projectId: string, cwd: string) => {
-    await createTerminal(_projectId, cwd);
-  };
 
   return (
     <div className="dashboard">
@@ -44,13 +39,14 @@ export function ProjectDashboard() {
         </div>
       ) : (
         <div className="project-grid">
-          {projects.map((project) => (
+          {projects.map((project, index) => (
             <ProjectCard
               key={project.id}
               project={project}
-              onOpenTerminal={() =>
-                handleOpenTerminal(project.id, project.path)
-              }
+              isActive={activeProjectId === project.id}
+              onClick={() => setActiveProject(project.id)}
+              onRemove={() => removeProject(project.id)}
+              style={{ animationDelay: `${index * 50}ms` }}
             />
           ))}
         </div>
