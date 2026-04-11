@@ -26,6 +26,7 @@ tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "6"
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 git2 = "0.20"
 notify = { version = "7", features = ["macos_fsevent"] }
 notify-debouncer-mini = "0.5"

@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod database;
 pub mod fs_watcher;
 pub mod git;
 pub mod hook_config;

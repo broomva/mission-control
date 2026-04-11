@@ -33,6 +33,8 @@ fn create_specta_builder() -> Builder {
             commands::terminal::list_project_terminals,
             commands::terminal::get_terminal_scrollback,
             commands::terminal::restore_terminal,
+            commands::terminal::list_tmux_sessions,
+            commands::terminal::reconnect_tmux_sessions,
             commands::workspace::load_workspace_state,
             commands::workspace::save_workspace_state,
             commands::fs::read_directory,
@@ -91,7 +93,11 @@ pub fn run() {
 
     info!("starting Mission Control");
 
+    // Primary persistence service — SQLite-backed with auto-migration from JSON
     let persistence = Arc::new(PersistenceService::new());
+    let db_pool = persistence.db_pool().clone();
+
+    // ProjectService gets its own persistence instance (same DB file, separate pool)
     let project_service = ProjectService::new(PersistenceService::new());
     let terminal_service = TerminalService::new(Arc::clone(&persistence));
     let git_service = GitService::new();
@@ -119,6 +125,7 @@ pub fn run() {
             Ok(())
         })
         .manage(persistence)
+        .manage(db_pool)
         .manage(project_service)
         .manage(terminal_service)
         .manage(git_service)
