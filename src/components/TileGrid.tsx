@@ -1,29 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { AgentInfo } from "../bindings";
+import { useTileDrag } from "../hooks/useTileDrag";
 import { useAgentStore } from "../stores/agentStore";
 import type { SplitDirection } from "../stores/tileLayoutStore";
 import { useTileLayoutStore } from "../stores/tileLayoutStore";
 import { AgentTile } from "./AgentTile";
 import { SplitContainer } from "./SplitContainer";
-
-function useTabDrag() {
-  const setDraggedAgent = useTileLayoutStore((s) => s.setDraggedAgent);
-
-  const onDragStart = useCallback(
-    (e: React.DragEvent, agentId: string) => {
-      e.dataTransfer.setData("agent-id", agentId);
-      e.dataTransfer.effectAllowed = "move";
-      setDraggedAgent(agentId);
-    },
-    [setDraggedAgent],
-  );
-
-  const onDragEnd = useCallback(() => {
-    setDraggedAgent(null);
-  }, [setDraggedAgent]);
-
-  return { onDragStart, onDragEnd };
-}
 
 interface TileGridProps {
   agents: AgentInfo[];
@@ -55,7 +37,7 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
   const { stopAgent, removeAgent } = useAgentStore();
   const [tabMenuId, setTabMenuId] = useState<string | null>(null);
   const tabMenuRef = useRef<HTMLDivElement>(null);
-  const { onDragStart, onDragEnd } = useTabDrag();
+  const { startDrag } = useTileDrag();
 
   // Close tab context menu on outside click
   const handleTabContextMenu = useCallback((e: React.MouseEvent, agentId: string) => {
@@ -135,7 +117,6 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
           <div key={a.id} className="tile-grid-tab-wrapper">
             <button
               type="button"
-              draggable="true"
               className={`tile-grid-tab ${a.id === focusedTileId ? "tile-grid-tab-active" : ""} ${minimizedTileIds.includes(a.id) ? "tile-grid-tab-minimized" : ""}`}
               onClick={() => {
                 if (minimizedTileIds.includes(a.id)) {
@@ -144,8 +125,11 @@ export function TileGrid({ agents, onSpawnAgent }: TileGridProps) {
                 setFocusedTile(a.id);
                 setTabMenuId(null);
               }}
-              onDragStart={(e) => onDragStart(e, a.id)}
-              onDragEnd={onDragEnd}
+              onMouseDown={(e) => {
+                if (e.button !== 0) return;
+                if ((e.target as HTMLElement).closest(".tile-grid-tab-close")) return;
+                startDrag(e, a.id, AGENT_LABELS[a.agent_type] ?? a.agent_type);
+              }}
               onContextMenu={(e) => handleTabContextMenu(e, a.id)}
             >
               <span
