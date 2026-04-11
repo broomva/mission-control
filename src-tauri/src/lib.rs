@@ -109,6 +109,8 @@ pub fn run() {
     let project_service = ProjectService::new(PersistenceService::new());
     let terminal_service = TerminalService::new(Arc::clone(&persistence));
     let git_service = GitService::new();
+    // Separate GitService instance for the hook server's auto-checkpoint feature
+    let git_service_for_hooks = Arc::new(GitService::new());
     let fs_watcher_service = FsWatcherService::new();
 
     // Shared timeline between AgentService and HookServer
@@ -121,7 +123,6 @@ pub fn run() {
         .join(".mission-control")
         .join("credentials.bin");
     let credential_store = Arc::new(CredentialStore::new(cred_path));
-
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
@@ -131,7 +132,7 @@ pub fn run() {
             // Start hook server for Claude Code hooks
             let app_handle = app.handle().clone();
             let hook_state = tauri::async_runtime::block_on(async {
-                hook_server::start_hook_server(app_handle, Arc::clone(&shared_timeline))
+                hook_server::start_hook_server(app_handle, Arc::clone(&shared_timeline), git_service_for_hooks)
                     .await
                     .expect("failed to start hook server")
             });

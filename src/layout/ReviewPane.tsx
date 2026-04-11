@@ -1,10 +1,15 @@
+import { CheckpointList } from "../components/CheckpointList";
 import { ReviewQueue } from "../components/ReviewQueue";
 import { useLayoutStore } from "../stores/layoutStore";
+import { useProjectStore } from "../stores/projectStore";
 
 export function ReviewPane() {
   const { rightPaneVisible, toggleRightPane } = useLayoutStore();
+  const { projects, activeProjectId } = useProjectStore();
 
   if (!rightPaneVisible) return null;
+
+  const activeProject = projects.find((p) => p.id === activeProjectId);
 
   return (
     <aside className="review-pane">
@@ -21,6 +26,12 @@ export function ReviewPane() {
       </div>
       <div className="review-pane-body">
         <ReviewQueue />
+        {activeProject && (
+          <CheckpointList
+            projectId={activeProject.id}
+            projectPath={activeProject.path}
+          />
+        )}
       </div>
     </aside>
   );

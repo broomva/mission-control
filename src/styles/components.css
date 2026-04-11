@@ -1998,3 +1998,102 @@
   font-size: var(--text-sm);
   margin-top: var(--space-2);
 }
+
+/* ============================================================
+   Checkpoints (BRO-654)
+   ============================================================ */
+
+.checkpoint-section {
+  border-top: 1px solid var(--glass-border);
+}
+
+.checkpoint-section-body {
+  padding: 0;
+}
+
+.checkpoint-empty {
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.checkpoint-empty p {
+  margin-bottom: var(--space-2);
+}
+
+.checkpoint-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkpoint-entry {
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background var(--transition-fast);
+}
+
+.checkpoint-entry:hover {
+  background: var(--glass-bg-hover);
+}
+
+.checkpoint-entry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.checkpoint-entry-desc {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.checkpoint-entry-time {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.checkpoint-entry-meta {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 2px;
+}
+
+.checkpoint-entry-oid {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.checkpoint-entry-agent {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+}
+
+.checkpoint-entry-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.checkpoint-entry-actions .btn {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.checkpoint-confirm-text {
+  font-size: var(--text-xs);
+  color: var(--danger);
+  flex: 1;
+  min-width: 0;
+}

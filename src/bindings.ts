@@ -103,22 +103,6 @@ async restoreTerminal(id: string, cols: number, rows: number) : Promise<Result<T
     else return { status: "error", error: e  as any };
 }
 },
-async listTmuxSessions() : Promise<Result<TmuxSessionResponse[], AppError>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("list_tmux_sessions") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async reconnectTmuxSessions() : Promise<Result<number, AppError>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("reconnect_tmux_sessions") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async loadWorkspaceState() : Promise<Result<WorkspaceState, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("load_workspace_state") };
@@ -194,6 +178,38 @@ async createWorktree(projectId: string, path: string, name: string, branch: stri
 async removeWorktree(projectId: string, path: string, name: string) : Promise<Result<null, AppError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("remove_worktree", { projectId, path, name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async createCheckpoint(projectId: string, path: string, description: string, agentId: string | null) : Promise<Result<CheckpointInfo, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_checkpoint", { projectId, path, description, agentId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listCheckpoints(projectId: string, path: string) : Promise<Result<CheckpointInfo[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_checkpoints", { projectId, path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async rollbackToCheckpoint(projectId: string, path: string, checkpointId: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("rollback_to_checkpoint", { projectId, path, checkpointId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteCheckpoint(projectId: string, path: string, checkpointId: string) : Promise<Result<null, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_checkpoint", { projectId, path, checkpointId }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -355,6 +371,7 @@ export type AgentOutputEvent = { agent_id: string; data: number[] }
 export type AgentStatusEvent = { agent_id: string; status: string; event: AgentEvent | null; token_usage: TokenUsage | null }
 export type AppError = { ProjectNotFound: string } | { ProjectAlreadyExists: string } | { TerminalNotFound: string } | { TerminalError: string } | { IoError: string } | { SerializationError: string } | { InvalidPath: string } | { GitError: string } | { AgentNotFound: string } | { AgentError: string }
 export type BranchInfo = { name: string; is_head: boolean; upstream: string | null; oid: string }
+export type CheckpointInfo = { id: string; project_id: string; agent_id: string | null; description: string; commit_oid: string; timestamp: string }
 export type CommitDetail = { sha: string; message: string; author: string; author_email: string; timestamp: number; parent_shas: string[]; files_changed: DiffFile[] }
 export type CommitInfo = { oid: string; short_oid: string; message: string; author: string; author_email: string; timestamp: number; parents: string[]; branch_refs: string[] }
 export type DiffFile = { path: string; 
@@ -382,6 +399,9 @@ export type FileStatusEntry = { path: string;
  */
 status: string }
 export type FsChangeEvent = { project_id: string; paths: string[] }
+/**
+ * Status snapshot exposed to the frontend.
+ */
 export type GatewayStatus = { port: number; running: boolean; active_sessions: number; configured_routes: string[]; configured_services: string[] }
 export type GitGraphData = { commits: GraphCommit[]; edges: GraphEdge[]; max_lanes: number }
 export type GitRefChangedEvent = { project_id: string }
@@ -396,10 +416,6 @@ kind: string }
 export type TerminalDataEvent = { terminal_id: string; data: number[] }
 export type TerminalExitEvent = { terminal_id: string }
 export type TerminalInfo = { id: string; project_id: string; title: string; cols: number; rows: number; cwd: string; created_at: string; status: string; scrollback_path: string | null }
-/**
- * Frontend-facing tmux session info
- */
-export type TmuxSessionResponse = { session_name: string; terminal_id: string; attached: boolean }
 export type TokenUsage = { input_tokens: number; output_tokens: number; cache_read_tokens: number; cache_creation_tokens: number; cost_usd: number }
 export type WorkspaceState = { layout: string | null; active_project_id: string | null }
 export type WorktreeInfo = { name: string; path: string; branch: string | null; is_main: boolean }

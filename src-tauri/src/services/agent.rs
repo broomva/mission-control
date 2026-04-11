@@ -72,6 +72,7 @@ impl AgentService {
                     id.clone(),
                     HookAgentContext {
                         project_id: project_id.clone(),
+                        project_path: Some(cwd.clone()),
                     },
                 );
             }

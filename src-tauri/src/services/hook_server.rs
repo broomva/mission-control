@@ -10,10 +10,12 @@ use tauri_specta::Event;
 use tracing::{error, info, warn};
 
 use crate::models::{AgentEvent, AgentStatusEvent, TokenUsage};
+use crate::services::git::GitService;
 
 /// Context stored per agent for hook correlation.
 pub struct HookAgentContext {
     pub project_id: String,
+    pub project_path: Option<String>,
 }
 
 /// Shared state for the hook server.
@@ -34,6 +36,9 @@ struct AppState {
     session_map: Arc<Mutex<HashMap<String, String>>>,
     app_handle: AppHandle,
     timeline: Arc<Mutex<Vec<AgentEvent>>>,
+    git_service: Arc<GitService>,
+    /// Rate limiter: agent_id -> last checkpoint timestamp (unix seconds)
+    checkpoint_rate: Arc<Mutex<HashMap<String, i64>>>,
 }
 
 #[derive(Deserialize)]
@@ -169,6 +174,13 @@ fn get_project_id(agent_id: &str, agents: &Mutex<HashMap<String, HookAgentContex
         .unwrap_or_default()
 }
 
+fn get_project_path(agent_id: &str, agents: &Mutex<HashMap<String, HookAgentContext>>) -> Option<String> {
+    agents
+        .lock()
+        .ok()
+        .and_then(|map| map.get(agent_id).and_then(|ctx| ctx.project_path.clone()))
+}
+
 // ─── Route Handlers ───
 
 async fn handle_session_start(
@@ -200,6 +212,9 @@ async fn handle_session_start(
     emit_status(&state, &agent_id, event, None);
     info!(agent_id = %agent_id, "hook: session-start");
 }
+
+/// Minimum seconds between auto-checkpoints per agent.
+const CHECKPOINT_RATE_LIMIT_SECS: i64 = 30;
 
 async fn handle_pre_tool_use(
     Query(q): Query<AgentQuery>,
@@ -236,6 +251,35 @@ async fn handle_pre_tool_use(
         }
         _ => format!("Using tool: {}", tool_name),
     };
+
+    // Auto-checkpoint for file-modifying tools (rate-limited)
+    if event_type == "file_write" || event_type == "command_exec" {
+        if let Some(project_path) = get_project_path(&agent_id, &state.agents) {
+            let now_secs = chrono::Utc::now().timestamp();
+            let should_checkpoint = {
+                let mut rate = state.checkpoint_rate.lock().unwrap();
+                let last = rate.get(&agent_id).copied().unwrap_or(0);
+                if now_secs - last >= CHECKPOINT_RATE_LIMIT_SECS {
+                    rate.insert(agent_id.clone(), now_secs);
+                    true
+                } else {
+                    false
+                }
+            };
+
+            if should_checkpoint {
+                let cp_desc = format!("Before {}: {}", tool_name, truncate(&summary, 60));
+                if let Err(e) = state.git_service.create_checkpoint(
+                    &project_id,
+                    &project_path,
+                    &cp_desc,
+                    Some(&agent_id),
+                ) {
+                    warn!(agent_id = %agent_id, error = %e, "auto-checkpoint failed");
+                }
+            }
+        }
+    }
 
     let event = make_event(&agent_id, &project_id, event_type, summary);
     emit_status(&state, &agent_id, event, None);
@@ -419,6 +463,7 @@ fn truncate(s: &str, max: usize) -> &str {
 pub async fn start_hook_server(
     app_handle: AppHandle,
     timeline: Arc<Mutex<Vec<AgentEvent>>>,
+    git_service: Arc<GitService>,
 ) -> Result<HookServerState, Box<dyn std::error::Error>> {
     let agents: Arc<Mutex<HashMap<String, HookAgentContext>>> =
         Arc::new(Mutex::new(HashMap::new()));
@@ -429,6 +474,8 @@ pub async fn start_hook_server(
         session_map: Arc::clone(&session_map),
         app_handle: app_handle.clone(),
         timeline: Arc::clone(&timeline),
+        git_service,
+        checkpoint_rate: Arc::new(Mutex::new(HashMap::new())),
     };
 
     let app = Router::new()
