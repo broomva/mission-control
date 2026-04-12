@@ -866,6 +866,27 @@
   color: var(--text-tertiary);
 }
 
+/* --- Pane Toggle Rail (collapsed sidebar reopener) --- */
+.pane-toggle-rail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  background: var(--bg-sidebar);
+  border: none;
+  border-left: 1px solid var(--border-default);
+  color: var(--text-tertiary);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.pane-toggle-rail:hover {
+  color: var(--text-secondary);
+  background: var(--bg-surface-hover);
+}
+
 /* --- File Explorer Bottom Panel --- */
 .file-explorer-bottom-panel {
   border-top: 1px solid var(--border-default);
@@ -956,7 +977,7 @@
 
 /* --- Sidebar History Section --- */
 .sidebar-history {
-  padding: var(--space-2) var(--space-4) var(--space-3);
+  padding: var(--space-2) 0 0;
   border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
 }
@@ -965,22 +986,91 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1) var(--space-4);
+  background: transparent;
+  border: none;
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: var(--space-2);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: color var(--transition-fast);
 }
 
-.sidebar-history-icon {
-  font-size: var(--text-xs);
+.sidebar-history-label:hover {
+  color: var(--text-secondary);
+}
+
+.sidebar-history-toggle {
+  font-size: 10px;
+  width: 10px;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.sidebar-history-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.sidebar-history-list {
+  padding: var(--space-1) 0 var(--space-2);
 }
 
 .sidebar-history-empty {
   font-size: var(--text-xs);
   color: var(--text-muted);
-  padding: var(--space-1) 0;
+  padding: var(--space-2) var(--space-4);
+}
+
+.sidebar-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1) var(--space-4) var(--space-1) var(--space-6);
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.sidebar-history-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.sidebar-history-item-cwd {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-history-item-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
 }
 
 /* --- Sidebar Bottom Icons --- */

@@ -62,6 +62,7 @@ fn create_specta_builder() -> Builder {
             commands::credentials::add_credential,
             commands::credentials::remove_credential,
             commands::credentials::get_gateway_status,
+            commands::session::list_claude_sessions,
         ])
         .events(collect_events![
             TerminalDataEvent,

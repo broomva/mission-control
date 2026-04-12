@@ -807,6 +807,37 @@
   overflow: hidden;
 }
 
+.timeline-toggle-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 20px;
+  padding: var(--space-2) 0;
+  background: var(--bg-sidebar);
+  border: none;
+  border-left: 1px solid var(--border-default);
+  color: var(--text-tertiary);
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.timeline-toggle-btn:hover {
+  color: var(--text-secondary);
+  background: var(--bg-surface-hover);
+}
+
+.timeline-toggle-count {
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent-primary);
+  line-height: 1;
+}
+
 .agent-timeline-sidebar {
   flex: 3;
   border-left: 1px solid var(--border-default);

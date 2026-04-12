@@ -239,9 +239,9 @@ async gitCommitDetail(projectId: string, path: string, sha: string) : Promise<Re
     else return { status: "error", error: e  as any };
 }
 },
-async spawnAgent(projectId: string, agentType: string, prompt: string | null, cwd: string) : Promise<Result<AgentInfo, AppError>> {
+async spawnAgent(projectId: string, agentType: string, prompt: string | null, cwd: string, resumeSessionId: string | null) : Promise<Result<AgentInfo, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("spawn_agent", { projectId, agentType, prompt, cwd }) };
+    return { status: "ok", data: await TAURI_INVOKE("spawn_agent", { projectId, agentType, prompt, cwd, resumeSessionId }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -334,6 +334,17 @@ async getGatewayStatus() : Promise<Result<GatewayStatus, AppError>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Read recent Claude Code sessions from ~/.claude/sessions/*.json
+ */
+async listClaudeSessions(limit: number | null) : Promise<Result<ClaudeSession[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_claude_sessions", { limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -372,6 +383,10 @@ export type AgentStatusEvent = { agent_id: string; status: string; event: AgentE
 export type AppError = { ProjectNotFound: string } | { ProjectAlreadyExists: string } | { TerminalNotFound: string } | { TerminalError: string } | { IoError: string } | { SerializationError: string } | { InvalidPath: string } | { GitError: string } | { AgentNotFound: string } | { AgentError: string }
 export type BranchInfo = { name: string; is_head: boolean; upstream: string | null; oid: string }
 export type CheckpointInfo = { id: string; project_id: string; agent_id: string | null; description: string; commit_oid: string; timestamp: string }
+/**
+ * A Claude Code session read from ~/.claude/sessions/*.json
+ */
+export type ClaudeSession = { pid: number; session_id: string; cwd: string; started_at: number; kind: string; entrypoint: string }
 export type CommitDetail = { sha: string; message: string; author: string; author_email: string; timestamp: number; parent_shas: string[]; files_changed: DiffFile[] }
 export type CommitInfo = { oid: string; short_oid: string; message: string; author: string; author_email: string; timestamp: number; parents: string[]; branch_refs: string[] }
 export type DiffFile = { path: string; 

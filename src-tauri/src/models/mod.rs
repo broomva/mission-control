@@ -4,11 +4,13 @@ pub mod events;
 pub mod fs;
 pub mod git;
 pub mod project;
+pub mod session;
 pub mod terminal;
 pub mod workspace;
 
 pub use agent::{AgentEvent, AgentInfo, TokenUsage};
 pub use error::AppError;
+pub use session::ClaudeSession;
 pub use events::{
     AgentExitEvent, AgentOutputEvent, AgentStatusEvent, FsChangeEvent, GitRefChangedEvent,
     TerminalDataEvent, TerminalExitEvent,

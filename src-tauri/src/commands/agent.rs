@@ -14,6 +14,7 @@ pub fn spawn_agent(
     agent_type: String,
     prompt: Option<String>,
     cwd: String,
+    resume_session_id: Option<String>,
     service: State<'_, Arc<AgentService>>,
     hook_state: State<'_, Arc<HookServerState>>,
     gateway: State<'_, Arc<AuthGateway>>,
@@ -32,6 +33,7 @@ pub fn spawn_agent(
         Some(hook_state.port),
         Some(&hook_state.agents),
         Some(proxy_url),
+        resume_session_id,
     )?;
 
     // Create a gateway session for this agent

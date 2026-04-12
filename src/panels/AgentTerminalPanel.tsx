@@ -37,6 +37,7 @@ export function AgentTerminalPanel({ agentId }: { agentId: string }) {
   const fitAddonRef = useRef<FitAddon | null>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [timelineOpen, setTimelineOpen] = useState(false);
 
   // Use global timeline from store (persists across tab switches)
   const globalTimeline = useAgentStore((s) => s.timeline);
@@ -178,33 +179,47 @@ export function AgentTerminalPanel({ agentId }: { agentId: string }) {
   return (
     <div className="agent-terminal-panel">
       <div className="agent-terminal-area" ref={containerRef} />
-      <div
-        className="agent-timeline-sidebar"
-        ref={timelineRef}
-        onScroll={handleTimelineScroll}
+      <button
+        type="button"
+        className="timeline-toggle-btn"
+        onClick={() => setTimelineOpen(!timelineOpen)}
+        title={timelineOpen ? "Hide timeline" : "Show timeline"}
+        aria-label={timelineOpen ? "Hide timeline" : "Show timeline"}
       >
-        <div className="timeline-header">Timeline</div>
-        {timelineEvents.length === 0 ? (
-          <div className="timeline-empty">Waiting for events...</div>
-        ) : (
-          timelineEvents.map((evt, i) => (
-            <div
-              key={`${evt.timestamp}-${i}`}
-              className={`timeline-event timeline-event-${evt.event_type}`}
-            >
-              <span className="timeline-event-icon">
-                {EVENT_ICONS[evt.event_type] ?? "?"}
-              </span>
-              <span className="timeline-event-summary" title={evt.summary}>
-                {evt.summary}
-              </span>
-              <span className="timeline-event-time">
-                {formatTime(evt.timestamp)}
-              </span>
-            </div>
-          ))
+        {timelineOpen ? "\u203A" : "\u2039"}
+        {!timelineOpen && timelineEvents.length > 0 && (
+          <span className="timeline-toggle-count">{timelineEvents.length}</span>
         )}
-      </div>
+      </button>
+      {timelineOpen && (
+        <div
+          className="agent-timeline-sidebar"
+          ref={timelineRef}
+          onScroll={handleTimelineScroll}
+        >
+          <div className="timeline-header">Timeline</div>
+          {timelineEvents.length === 0 ? (
+            <div className="timeline-empty">Waiting for events...</div>
+          ) : (
+            timelineEvents.map((evt, i) => (
+              <div
+                key={`${evt.timestamp}-${i}`}
+                className={`timeline-event timeline-event-${evt.event_type}`}
+              >
+                <span className="timeline-event-icon">
+                  {EVENT_ICONS[evt.event_type] ?? "?"}
+                </span>
+                <span className="timeline-event-summary" title={evt.summary}>
+                  {evt.summary}
+                </span>
+                <span className="timeline-event-time">
+                  {formatTime(evt.timestamp)}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

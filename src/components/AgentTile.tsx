@@ -12,8 +12,6 @@ const AGENT_LABELS: Record<string, string> = {
   custom: "Custom",
 };
 
-type InternalTab = "terminal" | "chat" | "diff";
-
 interface AgentTileProps {
   agent: AgentInfo;
   onClose: (id: string) => void;
@@ -48,7 +46,6 @@ function formatTokens(n: number): string {
 }
 
 export function AgentTile({ agent, onClose, onMaximize }: AgentTileProps) {
-  const [activeTab, setActiveTab] = useState<InternalTab>("terminal");
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const { stopAgent } = useAgentStore();
@@ -121,7 +118,11 @@ export function AgentTile({ agent, onClose, onMaximize }: AgentTileProps) {
           // Only start drag from left mouse button, not on buttons
           if (e.button !== 0) return;
           if ((e.target as HTMLElement).closest("button")) return;
-          startDrag(e, agent.id, AGENT_LABELS[agent.agent_type] ?? agent.agent_type);
+          startDrag(
+            e,
+            agent.id,
+            AGENT_LABELS[agent.agent_type] ?? agent.agent_type,
+          );
         }}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
@@ -178,37 +179,11 @@ export function AgentTile({ agent, onClose, onMaximize }: AgentTileProps) {
       {/* Notification badge */}
       {isWaiting && <div className="tile-notification-badge">!</div>}
 
-      {/* Internal tab bar */}
-      <div className="agent-tile-tabs">
-        {(["terminal", "chat", "diff"] as const).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            className={`agent-tile-tab ${activeTab === tab ? "agent-tile-tab-active" : ""}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
       {/* Content area */}
       <div className="agent-tile-content">
-        {activeTab === "terminal" && (
-          <div className="agent-tile-terminal-container">
-            <AgentTerminalPanel agentId={agent.id} />
-          </div>
-        )}
-        {activeTab === "chat" && (
-          <div className="agent-tile-placeholder">
-            Structured chat view coming soon
-          </div>
-        )}
-        {activeTab === "diff" && (
-          <div className="agent-tile-placeholder">
-            Agent diffs will appear here
-          </div>
-        )}
+        <div className="agent-tile-terminal-container">
+          <AgentTerminalPanel agentId={agent.id} />
+        </div>
       </div>
     </div>
   );

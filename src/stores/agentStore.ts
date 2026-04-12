@@ -11,6 +11,7 @@ interface AgentState {
     agentType: string,
     prompt: string | null,
     cwd: string,
+    resumeSessionId?: string | null,
   ) => Promise<AgentInfo | null>;
   stopAgent: (agentId: string) => Promise<void>;
   removeAgent: (agentId: string) => void;
@@ -30,8 +31,14 @@ export const useAgentStore = create<AgentState>((set) => ({
   timeline: [],
   loading: false,
 
-  spawnAgent: async (projectId, agentType, prompt, cwd) => {
-    const result = await commands.spawnAgent(projectId, agentType, prompt, cwd);
+  spawnAgent: async (projectId, agentType, prompt, cwd, resumeSessionId) => {
+    const result = await commands.spawnAgent(
+      projectId,
+      agentType,
+      prompt,
+      cwd,
+      resumeSessionId ?? null,
+    );
     if (result.status === "ok") {
       set((state) => ({ agents: [...state.agents, result.data] }));
       return result.data;

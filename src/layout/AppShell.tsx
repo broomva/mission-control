@@ -20,6 +20,7 @@ export function AppShell() {
     fileExplorerWidth,
     leftPaneVisible,
     rightPaneVisible,
+    toggleRightPane,
     setSidebarWidth,
     setFileExplorerWidth,
     saveLayout,
@@ -104,10 +105,25 @@ export function AppShell() {
           onOpenSpawnDialog={handleSpawnAgent}
           onCloseSpawnDialog={() => setShowSpawnDialog(false)}
         />
-        {rightPaneVisible && (
-          <ResizableSplitter position="right" onResize={handleExplorerResize} />
+        {rightPaneVisible ? (
+          <>
+            <ResizableSplitter
+              position="right"
+              onResize={handleExplorerResize}
+            />
+            <FileExplorer style={{ width: fileExplorerWidth }} />
+          </>
+        ) : (
+          <button
+            type="button"
+            className="pane-toggle-rail"
+            onClick={toggleRightPane}
+            title="Show explorer"
+            aria-label="Show explorer"
+          >
+            &#8249;
+          </button>
         )}
-        <FileExplorer style={{ width: fileExplorerWidth }} />
       </div>
       <StatusBar />
       {showCredentialSettings && (

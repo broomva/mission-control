@@ -133,6 +133,7 @@ async fn handle_spawn_agent(
             Some(state.hook_state.port),
             Some(&state.hook_state.agents),
             Some(proxy_url),
+            None,
         )
         .map_err(err_json)?;
 

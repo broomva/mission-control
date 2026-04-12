@@ -36,6 +36,7 @@ impl AgentService {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn spawn(
         &self,
         project_id: String,
@@ -48,6 +49,7 @@ impl AgentService {
         hook_port: Option<u16>,
         hook_agents: Option<&Arc<Mutex<HashMap<String, HookAgentContext>>>>,
         gateway_proxy_url: Option<String>,
+        resume_session_id: Option<String>,
     ) -> Result<AgentInfo, AppError> {
         let id = Uuid::new_v4().to_string();
         let pty_system = native_pty_system();
@@ -95,10 +97,14 @@ impl AgentService {
             "claude-code" => {
                 let mut c = CommandBuilder::new("claude");
                 c.arg("--dangerously-skip-permissions");
-                // Always start in interactive mode when hooks are active.
-                // The prompt (if any) will be sent via PTY input after startup.
-                // Only use -p mode when hooks are NOT active (headless/batch).
-                if !hooks_active {
+                // Resume a previous session if requested
+                if let Some(ref sid) = resume_session_id {
+                    c.arg("--resume");
+                    c.arg("--session-id");
+                    c.arg(sid);
+                } else if !hooks_active {
+                    // Only use -p mode when hooks are NOT active (headless/batch).
+                    // When hooks are active, the prompt is sent via PTY input after startup.
                     if let Some(ref p) = prompt {
                         c.arg("--output-format");
                         c.arg("stream-json");
@@ -289,12 +295,10 @@ impl AgentService {
             )
         };
 
-        let prompt = session_id.map(|sid| format!("--session-id {}", sid));
-
         self.spawn(
             project_id,
             agent_type,
-            prompt,
+            None,
             cwd,
             cols,
             rows,
@@ -302,6 +306,7 @@ impl AgentService {
             hook_port,
             hook_agents,
             gateway_proxy_url,
+            session_id,
         )
     }
 
